@@ -59,9 +59,9 @@ def CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isNorm=True, ignoreZeros=
       for zLoc in range(volume.shape[0]):
 
         startLoc = (zLoc, yLoc, xLoc)
-        xTarget = xLoc + d * np.cos(theta) * np.sin(theta)
-        yTarget = yLoc - d * np.sin(theta) * np.sin(theta)
-        zTarget = zLoc + d * np.cos(theta)
+        xTarget = xLoc + np.round(d * np.cos(theta) * np.sin(theta))
+        yTarget = yLoc - np.round(d * np.sin(theta) * np.sin(theta))
+        zTarget = zLoc + np.round(d * np.cos(theta))
         endLoc = (int(zTarget), int(yTarget), int(xTarget))
 
         # Check if the target location is within the bounds of the matrix.

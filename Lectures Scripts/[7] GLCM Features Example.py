@@ -22,8 +22,8 @@ coMatrix = np.zeros((N, N))
 for xLoc in range(A.shape[1]):
   for yLoc in range(A.shape[0]):
     startLoc = (yLoc, xLoc)
-    xTarget = xLoc + d * np.cos(theta)
-    yTarget = yLoc - d * np.sin(theta)
+    xTarget = xLoc + np.round(d * np.cos(theta))
+    yTarget = yLoc - np.round(d * np.sin(theta))
     endLoc = (int(yTarget), int(xTarget))
 
     # Check if the target location is within the bounds of the matrix.
@@ -53,7 +53,7 @@ for i in range(N):
 entropy = 0.0
 for i in range(N):
   for j in range(N):
-    if coMatrix[i, j] > 0:
+    if (coMatrix[i, j] > 0):
       entropy -= coMatrix[i, j] * np.log(coMatrix[i, j])
 
 # Calculate the correlation of the co-occurrence matrix.

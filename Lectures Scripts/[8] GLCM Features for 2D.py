@@ -14,8 +14,8 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isNorm=True, ignoreZeros=Tru
   for xLoc in range(image.shape[1]):
     for yLoc in range(image.shape[0]):
       startLoc = (yLoc, xLoc)
-      xTarget = xLoc + d * np.cos(theta)
-      yTarget = yLoc - d * np.sin(theta)
+      xTarget = xLoc + np.round(d * np.cos(theta))
+      yTarget = yLoc - np.round(d * np.sin(theta))
       endLoc = (int(yTarget), int(xTarget))
 
       # Check if the target location is within the bounds of the matrix.

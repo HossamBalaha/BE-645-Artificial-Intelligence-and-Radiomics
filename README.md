@@ -23,7 +23,7 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
 1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 - Introduction](https://youtu.be/pefwr1HP_wA)
 2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 - First Order Features](https://youtu.be/MpCFet8SEC4)
-2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - First Order Features](https://youtu.be/wrvbEjg3bw8)
+2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - GLCM](https://youtu.be/wrvbEjg3bw8)
 
 ... and more to come!
 

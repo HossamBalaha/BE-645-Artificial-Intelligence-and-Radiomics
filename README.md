@@ -12,6 +12,10 @@ This course offers both theoretical and practical knowledge about computer visio
 processing and analyzing radiology images, contributing to the shift towards radiomics. This transition will
 allow AI models to assist doctors and healthcare professionals in managing and diagnosing various diseases.
 
+> If you encountered any issues or errors in the code or lectures, please feel free to let me know. I will be more than
+happy to fix them and update the repository accordingly. Your feedback is highly appreciated and will help me improve
+the quality of the content provided in this series.
+
 ## Full Playlist and Videos
 
 This series is your gateway to the fascinating world of applying AI techniques to radiomics.
@@ -23,7 +27,8 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
 1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 - Introduction](https://youtu.be/pefwr1HP_wA)
 2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 - First Order Features](https://youtu.be/MpCFet8SEC4)
-2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - GLCM](https://youtu.be/wrvbEjg3bw8)
+3. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - GLCM](https://youtu.be/wrvbEjg3bw8)
+4. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 04 - GLRLM](https://youtu.be/0z39SjZMuyI)
 
 ... and more to come!
 

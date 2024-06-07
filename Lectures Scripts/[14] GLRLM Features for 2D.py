@@ -118,6 +118,6 @@ theta = 0
 rlMatrix = CalculateGLRLMRunLengthMatrix(cropped, theta, isNorm=True, ignoreZeros=True)
 features = CalculateGLRLMFeatures(rlMatrix, cropped)
 
-# Print the GLCM features.
+# Print the GLRLM features.
 for key in features:
   print(key, ":", features[key])

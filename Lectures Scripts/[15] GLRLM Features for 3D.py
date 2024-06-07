@@ -162,13 +162,13 @@ theta = 0
 
 volumeCropped = ReadVolume(caseImgPaths, caseSegPaths)
 
-coMatrix = CalculateGLRLM3DRunLengthMatrix(
+rlMatrix = CalculateGLRLM3DRunLengthMatrix(
   volumeCropped, theta,
   isNorm=True, ignoreZeros=True
 )
 
-features = CalculateGLRLMFeatures3D(coMatrix, volumeCropped)
+features = CalculateGLRLMFeatures3D(rlMatrix, volumeCropped)
 
-# Print the GLCM features.
+# Print the GLRLM features.
 for key in features:
   print(key, ":", features[key])

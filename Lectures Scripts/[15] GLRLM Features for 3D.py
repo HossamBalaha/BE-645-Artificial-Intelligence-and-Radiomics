@@ -48,80 +48,36 @@ def ReadVolume(caseImgPaths, caseSegPaths):
   return volumeCropped
 
 
-def CalculateGLRLMRunLengthMatrix(image, theta, isNorm=True, ignoreZeros=True):
-  N = np.max(image) + 1
-  R = np.max(image.shape)
+def CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=True, ignoreZeros=True):
+  N = np.max(volume) + 1
+  R = np.max(volume.shape)
 
   rlMatrix = np.zeros((N, R))
-  seenMatrix = np.zeros(image.shape)
-  dx = int(np.round(np.cos(theta)))
-  dy = int(np.round(np.sin(theta)))
-
-  for i in range(image.shape[0]):  # Rows
-    for j in range(image.shape[1]):  # Columns
-      # Skip if already seen.
-      if (seenMatrix[i, j] == 1):
-        continue
-
-      seenMatrix[i, j] = 1  # Mark as seen.
-      currentPixel = image[i, j]  # Current pixel value.
-      d = 1  # Distance.
-
-      while (
-        (i + d * dy >= 0) and
-        (i + d * dy < image.shape[0]) and
-        (j + d * dx >= 0) and
-        (j + d * dx < image.shape[1])
-      ):
-        if (image[i + d * dy, j + d * dx] == currentPixel):
-          seenMatrix[int(i + d * dy), int(j + d * dx)] = 1
-          d += 1
-        else:
-          break
-
-      # Ignore zeros if needed.
-      if (ignoreZeros and (currentPixel == 0)):
-        continue
-
-      rlMatrix[currentPixel, d - 1] += 1
-
-  if (isNorm):
-    # Normalize the run-length matrix.
-    rlMatrix = rlMatrix / (np.sum(rlMatrix) + 1e-6)
-
-  return rlMatrix
-
-
-def CalculateGLRLM3DRunLengthMatrix(image, theta, isNorm=True, ignoreZeros=True):
-  N = np.max(image) + 1
-  R = np.max(image.shape)
-
-  rlMatrix = np.zeros((N, R))
-  seenMatrix = np.zeros(image.shape)
+  seenMatrix = np.zeros(volume.shape)
   dx = int(np.round(np.cos(theta)) * np.sin(theta))
   dy = int(np.round(np.sin(theta)) * np.sin(theta))
   dz = int(np.round(np.cos(theta)))
 
-  for i in range(image.shape[0]):  # Z-axis
-    for j in range(image.shape[1]):  # Y-axis
-      for k in range(image.shape[2]):  # X-axis
+  for i in range(volume.shape[0]):  # Z-axis
+    for j in range(volume.shape[1]):  # Y-axis
+      for k in range(volume.shape[2]):  # X-axis
         # Skip if already seen.
         if (seenMatrix[i, j, k] == 1):
           continue
 
         seenMatrix[i, j, k] = 1  # Mark as seen.
-        currentPixel = image[i, j, k]  # Current pixel value.
+        currentPixel = volume[i, j, k]  # Current pixel value.
         d = 1  # Distance.
 
         while (
           (i + d * dz >= 0) and
-          (i + d * dz < image.shape[0]) and
+          (i + d * dz < volume.shape[0]) and
           (j + d * dy >= 0) and
-          (j + d * dy < image.shape[1]) and
+          (j + d * dy < volume.shape[1]) and
           (k + d * dx >= 0) and
-          (k + d * dx < image.shape[2])
+          (k + d * dx < volume.shape[2])
         ):
-          if (image[i + d * dz, j + d * dy, k + d * dx] == currentPixel):
+          if (volume[i + d * dz, j + d * dy, k + d * dx] == currentPixel):
             seenMatrix[int(i + d * dz), int(j + d * dy), int(k + d * dx)] = 1
             d += 1
           else:
@@ -140,9 +96,9 @@ def CalculateGLRLM3DRunLengthMatrix(image, theta, isNorm=True, ignoreZeros=True)
   return rlMatrix
 
 
-def CalculateGLRLMFeatures3D(rlMatrix, image):
-  N = np.max(image) + 1
-  R = np.max(image.shape)
+def CalculateGLRLMFeatures3D(rlMatrix, volume):
+  N = np.max(volume) + 1
+  R = np.max(volume.shape)
 
   rlN = np.sum(rlMatrix)
 
@@ -167,7 +123,7 @@ def CalculateGLRLMFeatures3D(rlMatrix, image):
   ) / rlN
 
   # Run Percentage.
-  rp = rlN / np.prod(image.shape)
+  rp = rlN / np.prod(volume.shape)
 
   # Low Gray Level Run Emphasis.
   lgre = np.sum(
@@ -191,14 +147,15 @@ def CalculateGLRLMFeatures3D(rlMatrix, image):
 
 
 caseImgPaths = [
-  r"Segmentation Slices/Segmentation Slice 65.bmp",
-  r"Segmentation Slices/Segmentation Slice 66.bmp",
-  r"Segmentation Slices/Segmentation Slice 67.bmp",
-]
-caseSegPaths = [
   r"Volume Slices/Volume Slice 65.bmp",
   r"Volume Slices/Volume Slice 66.bmp",
   r"Volume Slices/Volume Slice 67.bmp",
+
+]
+caseSegPaths = [
+  r"Segmentation Slices/Segmentation Slice 65.bmp",
+  r"Segmentation Slices/Segmentation Slice 66.bmp",
+  r"Segmentation Slices/Segmentation Slice 67.bmp",
 ]
 
 theta = 0

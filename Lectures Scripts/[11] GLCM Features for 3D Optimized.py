@@ -158,14 +158,14 @@ def CalculateGLCMFeatures3D(coMatrix):
 
 
 caseImgPaths = [
-  r"Segmentation Slices/Segmentation Slice 65.bmp",
-  r"Segmentation Slices/Segmentation Slice 66.bmp",
-  r"Segmentation Slices/Segmentation Slice 67.bmp",
-]
-caseSegPaths = [
   r"Volume Slices/Volume Slice 65.bmp",
   r"Volume Slices/Volume Slice 66.bmp",
   r"Volume Slices/Volume Slice 67.bmp",
+]
+caseSegPaths = [
+  r"Segmentation Slices/Segmentation Slice 65.bmp",
+  r"Segmentation Slices/Segmentation Slice 66.bmp",
+  r"Segmentation Slices/Segmentation Slice 67.bmp",
 ]
 
 d = 1

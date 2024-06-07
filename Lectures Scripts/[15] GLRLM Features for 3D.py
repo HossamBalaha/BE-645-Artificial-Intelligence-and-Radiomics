@@ -54,8 +54,8 @@ def CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=True, ignoreZeros=True
 
   rlMatrix = np.zeros((N, R))
   seenMatrix = np.zeros(volume.shape)
-  dx = int(np.round(np.cos(theta)) * np.sin(theta))
-  dy = int(np.round(np.sin(theta)) * np.sin(theta))
+  dx = int(np.round(np.cos(theta) * np.sin(theta)))
+  dy = int(np.round(np.sin(theta) * np.sin(theta)))
   dz = int(np.round(np.cos(theta)))
 
   for i in range(volume.shape[0]):  # Z-axis

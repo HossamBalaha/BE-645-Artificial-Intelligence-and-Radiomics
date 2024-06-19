@@ -65,7 +65,7 @@ def CalculateAllMetrics(cm):
 
 
 # Load the data.
-data = pd.read_csv("COVID-19 Radiography Database 2D.csv")
+data = pd.read_csv("COVID-19 Radiography Database 2D (2500 Records).csv")
 
 # Drop the null and empty values.
 data = data.dropna()

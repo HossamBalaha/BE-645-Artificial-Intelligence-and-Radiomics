@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: "Balaha"
+    given-names: "Hossam Magdy"
+    orcid: https://orcid.org/0000-0002-0686-4411
+    email: hmbala01@louisville.edu
+title: "BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2024)"
+version: "1.06.19"
+identifier:
+  - type: "DOI"
+    value: "10.5281/zenodo.12170422"
+date-released: 2024-06-19
+url: "https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics"

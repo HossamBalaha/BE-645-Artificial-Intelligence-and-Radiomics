@@ -1,5 +1,8 @@
 # Author: Hossam Magdy Balaha
 # Date: May 20th, 2024
+# Permission: Work may be shared or adapted provided the author is acknowledged.
+# License: CC BY 4.0
+
 
 import cv2
 import matplotlib.pyplot as plt

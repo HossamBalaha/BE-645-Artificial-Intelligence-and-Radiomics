@@ -447,11 +447,11 @@ applyNorm = True
 records = []
 
 # Load the dataset.
-for cls in classes[::-1]:
+for cls in classes:
   print(f"Processing class: {cls}")
   clsPath = os.path.join(datasetPath, cls)
   files = os.listdir(clsPath + "/images")
-  for file in tqdm.tqdm(files[:2500]):  # Process only 500 images from each class.
+  for file in tqdm.tqdm(files[:500]):  # Process only 500 images from each class.
     caseImgPath = os.path.join(clsPath, "images", file)
     caseSegPath = os.path.join(clsPath, "masks", file)
 
@@ -516,5 +516,5 @@ for cls in classes[::-1]:
 
 # Save the dataset.
 df = pd.DataFrame(records)
-df.to_csv("COVID-19 Radiography Database 2D (2500 Records).csv", index=False)
+df.to_csv("COVID-19 Radiography Database 2D (500 Records).csv", index=False)
 print("Dataset saved successfully.")

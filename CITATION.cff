@@ -9,6 +9,6 @@ title: "BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2024)"
 version: "1.06.19"
 identifier:
   - type: "DOI"
-    value: "10.5281/zenodo.12170422"
+    value: "https://doi.org/10.5281/zenodo.12170422"
 date-released: 2024-06-19
 url: "https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics"

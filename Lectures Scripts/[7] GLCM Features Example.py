@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: May 29th, 2024
+# Permissions and Citation: Refer to the README file.
 
 import numpy as np
 
@@ -18,6 +19,7 @@ A = np.array(A)
 N = np.max(A) + 1
 
 coMatrix = np.zeros((N, N))
+theta = np.radians(theta)
 
 for xLoc in range(A.shape[1]):
   for yLoc in range(A.shape[0]):

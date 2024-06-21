@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 13th, 2024
+# Permissions and Citation: Refer to the README file.
 
 import os, cv2, sys, tqdm
 import numpy as np
@@ -443,6 +444,8 @@ d = 1
 theta = 0
 ignoreZeros = True
 applyNorm = True
+
+theta = np.radians(theta)
 
 records = []
 

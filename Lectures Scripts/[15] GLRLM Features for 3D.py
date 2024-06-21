@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 6th, 2024
+# Permissions and Citation: Refer to the README file.
 
 import cv2
 import numpy as np
@@ -159,6 +160,7 @@ caseSegPaths = [
 ]
 
 theta = 0
+theta = np.radians(theta)
 
 volumeCropped = ReadVolume(caseImgPaths, caseSegPaths)
 

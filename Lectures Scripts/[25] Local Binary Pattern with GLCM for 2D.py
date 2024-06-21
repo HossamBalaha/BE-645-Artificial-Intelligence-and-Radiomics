@@ -1,10 +1,35 @@
 # Author: Hossam Magdy Balaha
-# Date: May 29th, 2024
+# Date: June 20th, 2024
 # Permissions and Citation: Refer to the README file.
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+
+
+def LocalBinaryPattern2D(image, theta=135, isClockwise=False):
+  distance = 1
+  windowSize = distance * 2 + 1
+  centerX = windowSize // 2
+  centerY = windowSize // 2
+
+  lbpMatrix = np.zeros(image.shape, dtype=np.uint8)
+  kernel = np.zeros((windowSize, windowSize), dtype=np.uint8)
+
+  paddedImage = np.pad(image, distance, mode="constant", constant_values=0)
+
+  for i in range(windowSize ** 2 - 1):
+    xLoc = int(centerX + np.round(distance * np.cos(np.radians(theta))))
+    yLoc = int(centerY - np.round(distance * np.sin(np.radians(theta))))
+    kernel[yLoc, xLoc] = 2 ** i
+    theta += -45 if isClockwise else 45
+
+  for y in range(1, image.shape[0] + 1):
+    for x in range(1, image.shape[1] + 1):
+      region = paddedImage[y - distance:y + distance + 1, x - distance:x + distance + 1]
+      comp = region >= region[centerY, centerX]
+      lbpMatrix[y - 1, x - 1] = np.sum(kernel[comp])
+
+  return lbpMatrix
 
 
 def CalculateGLCMCooccuranceMatrix(image, d, theta, isNorm=True, ignoreZeros=True):
@@ -120,28 +145,26 @@ roi = cv2.bitwise_and(caseImg, caseSeg)
 x, y, w, h = cv2.boundingRect(roi)
 cropped = roi[y:y + h, x:x + w]
 
-d = 1
-theta = 0
-theta = np.radians(theta)
+dGLCM = 1
+thetaGLCM = 0
+thetaGLCM = np.radians(thetaGLCM)
 
-coMatrix = CalculateGLCMCooccuranceMatrix(cropped, d, theta, isNorm=True, ignoreZeros=True)
-features = CalculateGLCMFeatures(coMatrix)
+thetaLBP = 135
+isClockwise = False
 
-# Print the GLCM features.
-for key in features:
-  print(key, ":", features[key])
+# Calculate the GLCM features for the cropped image.
+coMatrixCropped = CalculateGLCMCooccuranceMatrix(
+  cropped, d=dGLCM, theta=thetaGLCM, isNorm=True, ignoreZeros=True
+)
+features = CalculateGLCMFeatures(coMatrixCropped)
 
-# Display the co-occurrence matrix.
-plt.figure()
-plt.subplot(1, 2, 1)
-plt.imshow(cropped, cmap="gray")
-plt.title("Cropped Image")
-plt.axis("off")
-plt.colorbar()
-plt.tight_layout()
-plt.subplot(1, 2, 2)
-plt.imshow(coMatrix, cmap="gray")
-plt.title("Co-occurrence Matrix")
-plt.colorbar()
-plt.tight_layout()
-plt.show()
+# Calculate the GLCM features for the LBP image.
+lbpMatrix = LocalBinaryPattern2D(cropped, theta=thetaLBP, isClockwise=isClockwise)
+lbpMatrix = 255 - lbpMatrix
+coMatrixLBP = CalculateGLCMCooccuranceMatrix(
+  lbpMatrix, d=dGLCM, theta=thetaGLCM, isNorm=True, ignoreZeros=True,
+)
+featuresLBP = CalculateGLCMFeatures(coMatrixLBP)
+
+for k in features.keys():
+  print(f"%15s: (Cropped: {features[k]:10.4f}), (LBP: {featuresLBP[k]:10.4f})" % k)

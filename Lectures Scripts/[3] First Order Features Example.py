@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: May 20th, 2024
+# Permissions and Citations: Refer to the README file.
 
 import numpy as np
 import matplotlib.pyplot as plt

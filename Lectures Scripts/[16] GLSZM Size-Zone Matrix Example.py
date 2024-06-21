@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 12th, 2024
+# Permissions and Citation: Refer to the README file.
 
 import numpy as np
 

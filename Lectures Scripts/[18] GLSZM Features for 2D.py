@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 13th, 2024
+# Permissions and Citation: Refer to the README file.
 
 import cv2, sys
 import numpy as np

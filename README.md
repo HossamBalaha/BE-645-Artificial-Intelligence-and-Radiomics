@@ -119,6 +119,43 @@ All code used in the lectures will be available in this GitHub
 repository (https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics) in
 the `Lectures Scripts` folder.
 
+## Copyright and License
+
+No part of this series may be reproduced, distributed, or transmitted in any form or by any means, including
+photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the author,
+except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by
+copyright law.
+For permission requests, contact the author.
+
+The code provided in this series is for educational purposes only and should be used with caution. The author is not
+responsible for any misuse of the code provided.
+
+## Citations and Acknowledgments
+
+If you find this series helpful and use it in your research or projects, please consider citing it as:
+
+```bibtex
+@software{Balaha_BE_645_Artificial_2024,
+  author  = {Balaha, Hossam Magdy},
+  month   = jun,
+  title   = {{BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2024)}},
+  url     = {https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics},
+  version = {1.06.19},
+  year    = {2024}
+}
+
+@software{hossam_magdy_balaha_2024_12170422,
+  author    = {Hossam Magdy Balaha},
+  title     = {{HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics: v1.06.19}},
+  month     = jun,
+  year      = 2024,
+  publisher = {Zenodo},
+  version   = {v1.06.19},
+  doi       = {10.5281/zenodo.12170422},
+  url       = {https://doi.org/10.5281/zenodo.12170422}
+}
+```
+
 ## Contact
 
 This series is prepared and presented by `Hossam Magdy Balaha` from the University of Louisville's J.B. Speed School of

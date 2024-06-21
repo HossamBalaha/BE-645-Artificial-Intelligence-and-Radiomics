@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 2nd, 2024
+# Permissions and Citation: Refer to the README file.
 
 import cv2
 import numpy as np
@@ -114,6 +115,7 @@ x, y, w, h = cv2.boundingRect(roi)
 cropped = roi[y:y + h, x:x + w]
 
 theta = 0
+theta = np.radians(theta)
 
 rlMatrix = CalculateGLRLMRunLengthMatrix(cropped, theta, isNorm=True, ignoreZeros=True)
 features = CalculateGLRLMFeatures(rlMatrix, cropped)

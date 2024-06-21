@@ -1,5 +1,11 @@
 # Author: Hossam Magdy Balaha
 # Date: May 29th, 2024
+# Permission:
+# - Work can be shared but not used for commercial purposes.
+# - Author name and citation must be included.
+# - Modifications must be documented.
+# Citation:
+# Balaha, H. M. (2024). BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2024) (Version 1.06.19) [Computer software]. https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics
 
 import cv2
 import numpy as np

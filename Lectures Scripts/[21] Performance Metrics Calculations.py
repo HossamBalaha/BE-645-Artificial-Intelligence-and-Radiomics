@@ -1,7 +1,7 @@
 # Author: Hossam Magdy Balaha
 # Date: June 9th, 2024
 # Adopted from: https://github.com/HossamBalaha/BE-544-Artificial-Intelligence-Techniques-in-Digital-Histopathology
-
+# Permissions and Citation: Refer to the README file.
 
 import numpy as np
 

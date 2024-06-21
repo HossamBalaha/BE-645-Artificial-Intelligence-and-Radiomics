@@ -1,5 +1,6 @@
 # Author: Hossam Magdy Balaha
 # Date: June 2nd, 2024
+# Permissions and Citation: Refer to the README file.
 
 import numpy as np
 
@@ -19,6 +20,7 @@ print(A)
 
 N = np.max(A) + 1
 R = np.max(A.shape)
+theta = np.radians(theta)
 
 rlMatrix = np.zeros((N, R))
 seenMatrix = np.zeros(A.shape)

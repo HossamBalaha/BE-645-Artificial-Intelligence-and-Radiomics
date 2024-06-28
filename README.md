@@ -29,7 +29,10 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 - First Order Features](https://youtu.be/MpCFet8SEC4)
 3. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - GLCM](https://youtu.be/wrvbEjg3bw8)
 4. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 04 - GLRLM](https://youtu.be/0z39SjZMuyI)
-5. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 04 - GLSZM]()
+5. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 05 - GLSZM](https://youtu.be/djnwNE1_8cI)
+6. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 06 - Machine Learning Example](https://youtu.be/0Xk4eztvMHc)
+7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 - LBP](https://youtu.be/ZKJpComTCoQ)
+8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 - Shape Features](https://youtu.be/OO4KKR8KkJ4)
 
 ... and more to come!
 
@@ -45,6 +48,9 @@ The programming language used in this series is `Python`, and the primary librar
 6. `NiBabel` - A library to read and write common neuroimaging file formats.
 7. `Pandas` - A fast, powerful, flexible, and easy-to-use open-source data analysis and data manipulation library.
 8. `TQDM` - A fast, extensible progress bar for loops and CLI.
+10. `Trimesh` - A pure library for loading and using triangular meshes with an emphasis on watertight meshes.
+11. `pyglet` - A cross-platform windowing and multimedia library for Python.
+12. `Scikit-image` - A collection of algorithms for image processing.
 
 The packages versions of the libraries used in this series are:
 
@@ -57,6 +63,9 @@ splitfolders==0.5.1
 nibabel==5.2.1
 pandas==2.2.1
 tqdm==4.66.2
+trimesh==4.4.1
+pyglet==1.5.29
+scikit-image==0.22.0
 ```
 
 To install the required libraries, you can use the following PIP commands:
@@ -69,6 +78,11 @@ pip install matplotlib==3.8.3
 pip install scikit-learn==1.4.1.post1
 pip install split-folders==0.5.1
 pip install nibabel==5.2.1
+pip install pandas==2.2.1
+pip install tqdm==4.66.2
+pip install trimesh==4.4.1
+pip install pyglet==1.5.29
+pip install scikit-image==0.22.0
 ```
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work

@@ -83,7 +83,7 @@ xTrain, xTest, yTrain, yTest = train_test_split(
   X, yEnc,
   test_size=testRatio,
   random_state=42,
-  stratify=y
+  stratify=yEnc  # or y
 )
 
 # Train the model.

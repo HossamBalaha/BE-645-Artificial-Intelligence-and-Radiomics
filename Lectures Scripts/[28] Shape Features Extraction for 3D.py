@@ -52,7 +52,7 @@ def ReadVolume(caseImgPaths, caseSegPaths):
 def ShapeFeatures3D(volume):
   # Converts an (n, m, p) matrix into a mesh, using marching_cubes
   # marching_cubes => from skimage import measure
-  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volumeCropped)
+  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volume)
 
   # 1. Volume.
   volume = np.sum(volume)

@@ -11,49 +11,6 @@ import pandas as pd
 sys.setrecursionlimit(10 ** 6)
 
 
-def ReadVolume(caseImgPaths, caseSegPaths):
-  volumeCropped = []
-
-  for i in range(len(caseImgPaths)):
-    # Load the images.
-    caseImg = cv2.imread(caseImgPaths[i], cv2.IMREAD_GRAYSCALE)
-    caseSeg = cv2.imread(caseSegPaths[i], cv2.IMREAD_GRAYSCALE)
-
-    # Extract the ROI.
-    roi = cv2.bitwise_and(caseImg, caseSeg)
-
-    # Crop the ROI.
-    x, y, w, h = cv2.boundingRect(roi)
-    cropped = roi[y:y + h, x:x + w]
-
-    volumeCropped.append(cropped)
-
-  maxWidth = np.max([cropped.shape[1] for cropped in volumeCropped])
-  maxHeight = np.max([cropped.shape[0] for cropped in volumeCropped])
-
-  for i in range(len(volumeCropped)):
-    # Calculate the padding size.
-    deltaWidth = maxWidth - volumeCropped[i].shape[1]
-    deltaHeight = maxHeight - volumeCropped[i].shape[0]
-
-    # Add padding to the cropped image and place the image in the center.
-    padded = cv2.copyMakeBorder(
-      volumeCropped[i],  # Image to pad.
-      deltaHeight // 2,  # Top padding.
-      deltaHeight - deltaHeight // 2,  # Bottom padding.
-      deltaWidth // 2,  # Left padding.
-      deltaWidth - deltaWidth // 2,  # Right padding.
-      cv2.BORDER_CONSTANT,  # Padding type.
-      value=0  # Padding value.
-    )
-
-    volumeCropped[i] = padded.copy()
-
-  volumeCropped = np.array(volumeCropped)
-
-  return volumeCropped
-
-
 def FirstOrderFeatures(volume, isNorm=True, ignoreZeros=True):
   feautres = []
 
@@ -513,7 +470,7 @@ def CalculateGLSZMFeatures(szMatrix, volume, N, Z):
 def ShapeFeatures3D(volume):
   # Converts an (n, m, p) matrix into a mesh, using marching_cubes
   # marching_cubes => from skimage import measure
-  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volumeCropped)
+  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volume)
 
   # 1. Volume.
   volume = np.sum(volume)
@@ -564,3 +521,50 @@ def ShapeFeatures3D(volume):
     "Spherical Disproportion": sphericalDisproportion,
     "Euler Number"           : eulerNumber
   }
+
+
+datasetFile = r"nodulemnist3d.npz"
+data = np.load(datasetFile)
+trainData = np.load(datasetFile)["train_images"]
+trainLabels = np.load(datasetFile)["train_labels"]
+
+d = 1
+theta = 0
+theta = np.radians(theta)
+isNorm = True
+ignoreZeros = True
+
+features = []
+for i in tqdm.tqdm(range(trainData.shape[0])):
+  volume = trainData[i]
+
+  # First Order Statistics.
+  firstOrderFeatures = FirstOrderFeatures(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
+
+  # GLCM Features.
+  coMatrix = CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
+  glcmFeatures = CalculateGLCMFeatures3D(coMatrix)
+
+  # GLRLM Features.
+  rlMatrix = CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
+  glrlmFeatures = CalculateGLRLMFeatures3D(rlMatrix, volume)
+
+  # GLSZM Features.
+  szMatrix, szDict, N, Z = CalculateGLSZM3DSizeZoneMatrix3D(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
+  glszmFeatures = CalculateGLSZMFeatures(szMatrix, volume, N, Z)
+
+  # Shape Features.
+  shapeFeatures = ShapeFeatures3D(volume)
+
+  # Combine all features.
+  features.append({
+    **firstOrderFeatures,
+    **glcmFeatures,
+    **glrlmFeatures,
+    **glszmFeatures,
+    **shapeFeatures
+  })
+
+# Save the features to a CSV file.
+features = pd.DataFrame(features)
+features.to_csv("MedMNISTv2_Nodule_MNIST_3D.csv", index=False)

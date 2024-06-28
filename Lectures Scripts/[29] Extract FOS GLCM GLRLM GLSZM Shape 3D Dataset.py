@@ -562,9 +562,11 @@ for i in tqdm.tqdm(range(trainData.shape[0])):
     **glcmFeatures,
     **glrlmFeatures,
     **glszmFeatures,
-    **shapeFeatures
+    **shapeFeatures,
+    "Class": trainLabels[i],
   })
 
 # Save the features to a CSV file.
 features = pd.DataFrame(features)
 features.to_csv("MedMNISTv2_Nodule_MNIST_3D.csv", index=False)
+print("Dataset saved successfully.")

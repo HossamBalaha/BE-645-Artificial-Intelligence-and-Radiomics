@@ -455,69 +455,73 @@ for cls in classes:
   clsPath = os.path.join(datasetPath, cls)
   files = os.listdir(clsPath + "/images")
   for file in tqdm.tqdm(files[:500]):  # Process only 500 images from each class.
-    caseImgPath = os.path.join(clsPath, "images", file)
-    caseSegPath = os.path.join(clsPath, "masks", file)
+    try:
+      caseImgPath = os.path.join(clsPath, "images", file)
+      caseSegPath = os.path.join(clsPath, "masks", file)
 
-    # Load the images.
-    caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
-    caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
+      # Load the images.
+      caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
+      caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
 
-    # Resize the images.
-    caseImg = cv2.resize(caseImg, inputSize[:2], interpolation=cv2.INTER_CUBIC)
-    caseSeg = cv2.resize(caseSeg, inputSize[:2], interpolation=cv2.INTER_CUBIC)
-    caseSeg[caseSeg > 0] = 255
+      # Resize the images.
+      caseImg = cv2.resize(caseImg, inputSize[:2], interpolation=cv2.INTER_CUBIC)
+      caseSeg = cv2.resize(caseSeg, inputSize[:2], interpolation=cv2.INTER_CUBIC)
+      caseSeg[caseSeg > 0] = 255
 
-    contours = cv2.findContours(caseSeg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+      contours = cv2.findContours(caseSeg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    if (len(contours[0]) != 2):
+      if (len(contours[0]) != 2):
+        continue
+
+      # Sort the contours based on the x value in the bounding rectangle.
+      # Sorts in order of increasing x value (ascending).
+      contours = sorted(contours[0], key=lambda x: cv2.boundingRect(x)[0], reverse=False)
+      rightLung, leftLung = contours[0], contours[1]
+
+      leftLungMask = np.zeros_like(caseSeg)
+      cv2.fillPoly(leftLungMask, [leftLung], 255)
+      leftLungROI = cv2.bitwise_and(caseImg, leftLungMask)
+
+      rightLungMask = np.zeros_like(caseSeg)
+      cv2.fillPoly(rightLungMask, [rightLung], 255)
+      rightLungROI = cv2.bitwise_and(caseImg, rightLungMask)
+
+      record = {}
+
+      for i, roi in enumerate([rightLungROI, leftLungROI]):
+        # Crop the ROI.
+        x, y, w, h = cv2.boundingRect(roi)
+        cropped = roi[y:y + h, x:x + w]
+
+        # Extract the features.
+        firstOrder = FirstOrderFeatures(cropped, isNorm=applyNorm, ignoreZeros=ignoreZeros)
+
+        glcm = CalculateGLCMCooccuranceMatrix(cropped, d, theta, isNorm=applyNorm, ignoreZeros=ignoreZeros)
+
+        glcmFeatures = CalculateGLCMFeatures(glcm)
+
+        rlMatrix = CalculateGLRLMRunLengthMatrix(cropped, theta, isNorm=applyNorm, ignoreZeros=ignoreZeros)
+
+        rlFeatures = CalculateGLRLMFeatures(rlMatrix, cropped)
+
+        szMatrix, szDict, N, Z = CalculateGLSZMSizeZoneMatrix(
+          cropped, connectivity=connectivity, isNorm=applyNorm, ignoreZeros=ignoreZeros
+        )
+
+        szFeatures = CalculateGLSZMFeatures(szMatrix, cropped, N, Z)
+
+        record.update({k + f"_{i + 1}": v for k, v in firstOrder.items()})
+        record.update({k + f"_{i + 1}": v for k, v in glcmFeatures.items()})
+        record.update({k + f"_{i + 1}": v for k, v in rlFeatures.items()})
+        record.update({k + f"_{i + 1}": v for k, v in szFeatures.items()})
+
+      record["Class"] = cls
+      records.append(record)
+    except Exception as e:
+      print(f"Error in file: {file}. Error is: {e}")
       continue
-
-    # Sort the contours based on the x value in the bounding rectangle.
-    # Sorts in order of increasing x value (ascending).
-    contours = sorted(contours[0], key=lambda x: cv2.boundingRect(x)[0], reverse=False)
-    rightLung, leftLung = contours[0], contours[1]
-
-    leftLungMask = np.zeros_like(caseSeg)
-    cv2.fillPoly(leftLungMask, [leftLung], 255)
-    leftLungROI = cv2.bitwise_and(caseImg, leftLungMask)
-
-    rightLungMask = np.zeros_like(caseSeg)
-    cv2.fillPoly(rightLungMask, [rightLung], 255)
-    rightLungROI = cv2.bitwise_and(caseImg, rightLungMask)
-
-    record = {}
-
-    for i, roi in enumerate([rightLungROI, leftLungROI]):
-      # Crop the ROI.
-      x, y, w, h = cv2.boundingRect(roi)
-      cropped = roi[y:y + h, x:x + w]
-
-      # Extract the features.
-      firstOrder = FirstOrderFeatures(cropped, isNorm=applyNorm, ignoreZeros=ignoreZeros)
-
-      glcm = CalculateGLCMCooccuranceMatrix(cropped, d, theta, isNorm=applyNorm, ignoreZeros=ignoreZeros)
-
-      glcmFeatures = CalculateGLCMFeatures(glcm)
-
-      rlMatrix = CalculateGLRLMRunLengthMatrix(cropped, theta, isNorm=applyNorm, ignoreZeros=ignoreZeros)
-
-      rlFeatures = CalculateGLRLMFeatures(rlMatrix, cropped)
-
-      szMatrix, szDict, N, Z = CalculateGLSZMSizeZoneMatrix(
-        cropped, connectivity=connectivity, isNorm=applyNorm, ignoreZeros=ignoreZeros
-      )
-
-      szFeatures = CalculateGLSZMFeatures(szMatrix, cropped, N, Z)
-
-      record.update({k + f"_{i + 1}": v for k, v in firstOrder.items()})
-      record.update({k + f"_{i + 1}": v for k, v in glcmFeatures.items()})
-      record.update({k + f"_{i + 1}": v for k, v in rlFeatures.items()})
-      record.update({k + f"_{i + 1}": v for k, v in szFeatures.items()})
-
-    record["Class"] = cls
-    records.append(record)
 
 # Save the dataset.
 df = pd.DataFrame(records)
-df.to_csv("COVID-19 Radiography Database 2D (500 Records).csv", index=False)
-print("Dataset saved successfully.")
+df.to_csv("COVID-19/COVID-19 Radiography Database 2D (500 Records).csv", index=False)
+print("Features are extracted successfully.")

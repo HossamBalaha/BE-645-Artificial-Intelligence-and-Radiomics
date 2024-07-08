@@ -523,10 +523,17 @@ def ShapeFeatures3D(volume):
   }
 
 
+folder = r"MedMNISTv2"
+
 datasetFile = r"nodulemnist3d.npz"
-data = np.load(datasetFile)
-trainData = np.load(datasetFile)["train_images"]
-trainLabels = np.load(datasetFile)["train_labels"]
+prefix = r"MedMNISTv2_Nodule_MNIST_3D"
+
+# datasetFile = r"organmnist3d.npz"
+# prefix = "MedMNISTv2_Organ_MNIST_3D"
+
+data = np.load(os.path.join(folder, datasetFile))
+print("Contains the following keys: ", data.files)
+
 
 d = 1
 theta = 0
@@ -534,39 +541,58 @@ theta = np.radians(theta)
 isNorm = True
 ignoreZeros = True
 
-features = []
-for i in tqdm.tqdm(range(trainData.shape[0])):
-  volume = trainData[i]
+parts = ["train", "val", "test"]
 
-  # First Order Statistics.
-  firstOrderFeatures = FirstOrderFeatures(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
+for part in parts:
+  print(f"Extracting features for the {part} part.")
+  csvStorePath = os.path.join(folder, rf"{prefix}_{part.capitalize()}.csv")
 
-  # GLCM Features.
-  coMatrix = CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
-  glcmFeatures = CalculateGLCMFeatures3D(coMatrix)
+  if (os.path.exists(csvStorePath)):
+    print(f"Features for the {part} part already exist.")
+    continue
 
-  # GLRLM Features.
-  rlMatrix = CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
-  glrlmFeatures = CalculateGLRLMFeatures3D(rlMatrix, volume)
+  images = data[f"{part}_images"]
+  labels = data[f"{part}_labels"]
 
-  # GLSZM Features.
-  szMatrix, szDict, N, Z = CalculateGLSZM3DSizeZoneMatrix3D(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
-  glszmFeatures = CalculateGLSZMFeatures(szMatrix, volume, N, Z)
 
-  # Shape Features.
-  shapeFeatures = ShapeFeatures3D(volume)
+  features = []
+  for i in tqdm.tqdm(range(images.shape[0])):
+    try:
+      volume = images[i]
 
-  # Combine all features.
-  features.append({
-    **firstOrderFeatures,
-    **glcmFeatures,
-    **glrlmFeatures,
-    **glszmFeatures,
-    **shapeFeatures,
-    "Class": trainLabels[i],
-  })
+      # First Order Statistics.
+      firstOrderFeatures = FirstOrderFeatures(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
 
-# Save the features to a CSV file.
-features = pd.DataFrame(features)
-features.to_csv("MedMNISTv2_Nodule_MNIST_3D.csv", index=False)
-print("Dataset saved successfully.")
+      # GLCM Features.
+      coMatrix = CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
+      glcmFeatures = CalculateGLCMFeatures3D(coMatrix)
+
+      # GLRLM Features.
+      rlMatrix = CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=isNorm, ignoreZeros=ignoreZeros)
+      glrlmFeatures = CalculateGLRLMFeatures3D(rlMatrix, volume)
+
+      # GLSZM Features.
+      szMatrix, szDict, N, Z = CalculateGLSZM3DSizeZoneMatrix3D(volume, isNorm=isNorm, ignoreZeros=ignoreZeros)
+      glszmFeatures = CalculateGLSZMFeatures(szMatrix, volume, N, Z)
+
+      # Shape Features.
+      shapeFeatures = ShapeFeatures3D(volume)
+
+      # Combine all features.
+      features.append({
+        **firstOrderFeatures,
+        **glcmFeatures,
+        **glrlmFeatures,
+        **glszmFeatures,
+        **shapeFeatures,
+        "Class": labels[i],
+      })
+    except Exception as e:
+      print(f"Error in index: {i}. Error is: {e}")
+      continue
+
+  # Save the features to a CSV file.
+  features = pd.DataFrame(features)
+  features.to_csv(csvStorePath, index=False)
+
+print("Features are extracted successfully.")

@@ -2,6 +2,7 @@
 # Date: June 13th, 2024
 # Permissions and Citation: Refer to the README file.
 
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -66,7 +67,9 @@ def CalculateAllMetrics(cm):
 
 
 # Load the data.
-data = pd.read_csv("COVID-19 Radiography Database 2D (2500 Records).csv")
+filename = "COVID-19 Radiography Database 2D (500 Records).csv"
+folder = "COVID-19"
+data = pd.read_csv(os.path.join(folder, filename))
 
 # Drop the null and empty values.
 data = data.dropna()
@@ -100,7 +103,12 @@ metrics = CalculateAllMetrics(cm)
 for key, value in metrics.items():
   print(f"{key}: {value}")
 
+# Save the metrics in a CSV file.
+df = pd.DataFrame(metrics, index=[0])
+df.to_csv(os.path.join(folder, f"{filename} Metrics.csv"), index=False)
+
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=le.classes_)
 disp.plot()
 plt.show()
+plt.savefig(os.path.join(folder, f"{filename} CM.png"))
 plt.close()

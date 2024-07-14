@@ -33,6 +33,7 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 6. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 06 - Machine Learning Example](https://youtu.be/0Xk4eztvMHc)
 7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 - LBP](https://youtu.be/ZKJpComTCoQ)
 8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 - Shape Features](https://youtu.be/OO4KKR8KkJ4)
+9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 - Machine Learning 3D Example](https://youtu.be/EXaAj1syKvk)
 
 ... and more to come!
 
@@ -51,6 +52,7 @@ The programming language used in this series is `Python`, and the primary librar
 10. `Trimesh` - A pure library for loading and using triangular meshes with an emphasis on watertight meshes.
 11. `pyglet` - A cross-platform windowing and multimedia library for Python.
 12. `Scikit-image` - A collection of algorithms for image processing.
+13. `Imbalanced-learn` - A Python library to tackle the problem of imbalanced datasets.
 
 The packages versions of the libraries used in this series are:
 
@@ -66,6 +68,7 @@ tqdm==4.66.2
 trimesh==4.4.1
 pyglet==1.5.29
 scikit-image==0.22.0
+imbalanced-learn=0.12.3
 ```
 
 To install the required libraries, you can use the following PIP commands:
@@ -83,6 +86,7 @@ pip install tqdm==4.66.2
 pip install trimesh==4.4.1
 pip install pyglet==1.5.29
 pip install scikit-image==0.22.0
+pip install imbalanced-learn==0.12.3
 ```
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work
@@ -104,6 +108,11 @@ Dataset Link: https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation
 More information: Original dataset is The Liver Tumor Segmentation Benchmark (LiTS) that can be accessed from this
 link: https://arxiv.org/abs/1901.04056
 
+Citation for the Liver Tumor Segmentation dataset:
+
+> Bilic, P., Christ, P., Li, H. B., Vorontsov, E., Ben-Cohen, A., Kaissis, G., ... & Menze, B. (2023). The liver tumor
+> segmentation benchmark (lits). Medical Image Analysis, 84, 102680.
+
 ***COVID-19 Radiography Database***
 
 A team of researchers from Qatar University, Doha, the University of Dhaka, and their collaborators from Pakistan and
@@ -124,6 +133,29 @@ Citation for the COVID-19 Radiography Database:
 > Chowdhury, M. E., Rahman, T., Khandakar, A., Mazhar, R., Kadir, M. A., Mahbub, Z. B., ... & Islam, M. T. (2020). Can
 > AI help in screening viral and COVID-19 pneumonia?. Ieee Access, 8, 132665-132676.
 
+***[MedMNIST+] 18x Standardized Datasets for 2D and 3D Biomedical Image Classification with Multiple Size Options: 28 (
+MNIST-Like), 64, 128, and 224***
+
+MedMNIST is a comprehensive collection of standardized biomedical images, designed to simplify research
+and educational activities in biomedical image analysis, computer vision, and machine learning.
+It includes 12 datasets for 2D images and 6 datasets for 3D images, all pre-processed to 28x28 (2D) or
+28x28x28 (3D) with classification labels, eliminating the need for background knowledge.
+The dataset spans various data scales (100 to 100,000) and tasks (binary/multi-class classification,
+ordinal regression, multi-label classification), totaling around 708K 2D and 10K 3D images.
+
+Recently, MedMNIST+ was released, offering larger image sizes (64x64, 128x128, 224x224 for 2D, and 64x64x64 for 3D)
+to support the development of medical foundation models.
+
+Dataset Link: https://zenodo.org/records/10519652
+
+Citation for the MedMNIST+ dataset:
+
+> Yang, J., Shi, R., Wei, D., Liu, Z., Zhao, L., Ke, B., ... & Ni, B. (2023). Medmnist v2-a large-scale lightweight
+> benchmark for 2d and 3d biomedical image classification. Scientific Data, 10(1), 41.
+>
+> Yang, J., Shi, R., & Ni, B. (2021, April). Medmnist classification decathlon: A lightweight automl benchmark for
+> medical image analysis. In 2021 IEEE 18th International Symposium on Biomedical Imaging (ISBI) (pp. 191-195). IEEE.
+
 _Disclaimer: The datasets are provided for educational purposes only. They are publicly available and can be
 accessed from their original links. The author, myself, does not own the datasets._
 
@@ -141,8 +173,10 @@ except in the case of brief quotations embodied in critical reviews and certain 
 copyright law.
 For permission requests, contact the author.
 
-The code provided in this series is for educational purposes only and should be used with caution. The author is not
-responsible for any misuse of the code provided.
+The code provided in this series is for educational purposes only and should be used with caution.
+The author is not responsible for any misuse of the code provided.
+
+If you need to use the code for research or commercial purposes, please contact the author for a written permission.
 
 ## Citations and Acknowledgments
 

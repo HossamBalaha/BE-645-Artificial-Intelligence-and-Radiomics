@@ -34,8 +34,8 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 - LBP](https://youtu.be/ZKJpComTCoQ)
 8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 - Shape Features](https://youtu.be/OO4KKR8KkJ4)
 9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 - Machine Learning 3D Example](https://youtu.be/EXaAj1syKvk)
-
-... and more to come!
+10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 - Machine Learning 3D Example Part-2](https://youtu.be/bFPzK4QFPQQ)
+11. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 11 - Building & Tuning ML-based System](https://youtu.be/rFFF3PhxMt4)
 
 ## Programming Language and Libraries
 
@@ -53,6 +53,9 @@ The programming language used in this series is `Python`, and the primary librar
 11. `pyglet` - A cross-platform windowing and multimedia library for Python.
 12. `Scikit-image` - A collection of algorithms for image processing.
 13. `Imbalanced-learn` - A Python library to tackle the problem of imbalanced datasets.
+14. `XGBoost` - An optimized distributed gradient boosting library designed to be highly efficient, flexible, and
+    portable.
+15. `Optuna` - An automatic hyperparameter optimization software framework that is suitable for machine learning tasks.
 
 The packages versions of the libraries used in this series are:
 
@@ -69,6 +72,8 @@ trimesh==4.4.1
 pyglet==1.5.29
 scikit-image==0.22.0
 imbalanced-learn=0.12.3
+xgboost=2.1.0
+optuna=3.6.1
 ```
 
 To install the required libraries, you can use the following PIP commands:
@@ -87,6 +92,8 @@ pip install trimesh==4.4.1
 pip install pyglet==1.5.29
 pip install scikit-image==0.22.0
 pip install imbalanced-learn==0.12.3
+pip install xgboost==2.1.0
+pip install optuna==3.6.1
 ```
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work

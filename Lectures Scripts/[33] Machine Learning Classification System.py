@@ -5,7 +5,7 @@
         ╩ ╩└─┘└─┘└─┘┴ ┴┴ ┴  ╩ ╩┴ ┴└─┘─┴┘ ┴   ╚═╝┴ ┴┴─┘┴ ┴┴ ┴┴ ┴
 ========================================================================
 # Author: Hossam Magdy Balaha
-# Date: July 5st, 2024
+# Date: July 5th, 2024
 # Permissions and Citation: Refer to the README file.
 '''
 

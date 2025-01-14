@@ -1,82 +1,103 @@
+'''
+========================================================================
+        ╦ ╦┌─┐┌─┐┌─┐┌─┐┌┬┐  ╔╦╗┌─┐┌─┐┌┬┐┬ ┬  ╔╗ ┌─┐┬  ┌─┐┬ ┬┌─┐
+        ╠═╣│ │└─┐└─┐├─┤│││  ║║║├─┤│ ┬ ││└┬┘  ╠╩╗├─┤│  ├─┤├─┤├─┤
+        ╩ ╩└─┘└─┘└─┘┴ ┴┴ ┴  ╩ ╩┴ ┴└─┘─┴┘ ┴   ╚═╝┴ ┴┴─┘┴ ┴┴ ┴┴ ┴
+========================================================================
 # Author: Hossam Magdy Balaha
-# Date: May 20th, 2024
-# Permissions and Citations: Refer to the README file.
+# Initial Creation Date: May 20th, 2024
+# Last Modification Date: Jan 14th, 2025
+# Permissions and Citation: Refer to the README file.
+'''
 
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
+# Import necessary libraries.
+import cv2  # For image processing tasks.
+import numpy as np  # For numerical operations.
+import matplotlib.pyplot as plt  # For plotting graphs.
 
-caseImgPath = r"Sample Liver Image.bmp"
-caseSegPath = r"Sample Liver Segmentation.bmp"
+# Define the paths to the input image and segmentation mask.
+caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the liver image.
+caseSegPath = r"Data/Sample Liver Segmentation.bmp"  # Path to the liver segmentation mask.
 
-# Load the images.
-caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
-caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
+# Load the images in grayscale mode.
+caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the liver image.
+caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)  # Load the segmentation mask.
 
-# Extract the ROI.
-roi = cv2.bitwise_and(caseImg, caseSeg)
+# Extract the Region of Interest (ROI) using the segmentation mask.
+roi = cv2.bitwise_and(caseImg, caseSeg)  # Apply bitwise AND operation to extract the ROI.
 
-# Crop the ROI.
-x, y, w, h = cv2.boundingRect(roi)
-cropped = roi[y:y + h, x:x + w]
+# Crop the ROI to remove unnecessary background.
+x, y, w, h = cv2.boundingRect(roi)  # Get the bounding box coordinates of the ROI.
+cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
 
-# Calculate the histogram.
-min = int(np.min(cropped))
-max = int(np.max(cropped))
-hist2D = []
+# Calculate the histogram of the cropped ROI.
+min = int(np.min(cropped))  # Find the minimum pixel value in the cropped ROI.
+max = int(np.max(cropped))  # Find the maximum pixel value in the cropped ROI.
+hist2D = []  # Initialize an empty list to store the histogram values.
+
+# Loop through each possible value in the range [min, max].
 for i in range(min, max + 1):
-  hist2D.append(np.count_nonzero(cropped == i))
-hist2D = np.array(hist2D)
+  hist2D.append(np.count_nonzero(cropped == i))  # Count occurrences of the value `i` in the cropped ROI.
+hist2D = np.array(hist2D)  # Convert the histogram list to a NumPy array.
 
-# Ignore the background.
-hist2D = hist2D[1:]
-min += 1
+# Ignore the background (assumed to be the first bin in the histogram).
+hist2D = hist2D[1:]  # Remove the first bin (background).
+min += 1  # Adjust the minimum value to exclude the background.
 
-# Calculate the count from the histogram.
-count = np.sum(hist2D)
+# Calculate the total count of values from the histogram.
+count = np.sum(hist2D)  # Sum all frequencies in the histogram.
 
-# Determine the range.
-rng = np.arange(min, max + 1)
+# Determine the range of values in the histogram.
+rng = np.arange(min, max + 1)  # Create an array of values from `min` to `max`.
 
-# Calculate the sum from the histogram.
-sum = np.sum(hist2D * rng)
+# Calculate the sum of values from the histogram.
+sum = np.sum(hist2D * rng)  # Multiply each value by its frequency and sum the results.
 
-# Calculate the mean from the histogram.
-mean = sum / count
+# Calculate the mean (average) value from the histogram.
+mean = sum / count  # Divide the total sum by the total count.
 
 # Calculate the variance from the histogram.
-variance = np.sum(hist2D * (rng - mean) ** 2) / count
+variance = np.sum(hist2D * (rng - mean) ** 2) / count  # Measure of the spread of the data.
 
 # Calculate the standard deviation from the histogram.
-stdDev = np.sqrt(variance)
+stdDev = np.sqrt(variance)  # Square root of the variance.
 
 # Calculate the skewness from the histogram.
-skewness = np.sum(hist2D * (rng - mean) ** 3) / (count * stdDev ** 3)
+skewness = np.sum(hist2D * (rng - mean) ** 3) / (count * stdDev ** 3)  # Measure of asymmetry in the data.
 
 # Calculate the kurtosis from the histogram.
-kurtosis = np.sum(hist2D * (rng - mean) ** 4) / (count * stdDev ** 4)
+kurtosis = np.sum(hist2D * (rng - mean) ** 4) / (count * stdDev ** 4)  # Measure of the "tailedness" of the data.
 
 # Calculate the excess kurtosis from the histogram.
-exKurtosis = kurtosis - 3
+exKurtosis = kurtosis - 3  # Excess kurtosis relative to a normal distribution.
 
-# Print the results.
-print("Min: ", min)
-print("Max: ", max)
-print("Range: ", rng)
-print("Count: ", count)
-print("Sum: ", sum)
-print("Mean: ", mean)
-print("Variance: ", variance)
-print("Standard Deviation: ", stdDev)
-print("Skewness: ", skewness)
-print("Kurtosis: ", kurtosis)
-print("Excess Kurtosis: ", exKurtosis)
+# Print the calculated statistics.
+print("Min: ", min)  # Print the minimum value.
+print("Max: ", max)  # Print the maximum value.
+print("Range: ", rng)  # Print the range of values.
+print("Count: ", count)  # Print the total count of values.
+print("Sum: ", sum)  # Print the sum of values.
+print("Mean: ", mean)  # Print the mean value.
+print("Variance: ", variance)  # Print the variance.
+print("Standard Deviation: ", stdDev)  # Print the standard deviation.
+print("Skewness: ", skewness)  # Print the skewness.
+print("Kurtosis: ", kurtosis)  # Print the kurtosis.
+print("Excess Kurtosis: ", exKurtosis)  # Print the excess kurtosis.
 
 # Plot the histogram.
-plt.figure()
-plt.bar(np.arange(min, max + 1), hist2D)
-plt.title("2D Histogram")
-plt.xlabel("Pixel Value")
-plt.ylabel("Frequency")
-plt.tight_layout()
+plt.figure()  # Create a new figure for the plot.
+plt.bar(np.arange(min, max + 1), hist2D)  # Plot the histogram as a bar chart.
+plt.title("2D Histogram")  # Set the title of the plot.
+plt.xlabel("Pixel Value")  # Label the x-axis.
+plt.ylabel("Frequency")  # Label the y-axis.
+plt.tight_layout()  # Adjust the layout for better visualization.
+
+# Save the histogram plot as an image file.
+plt.savefig(
+  caseImgPath.replace(".bmp", " Histogram.jpg"),  # Replace the file extension and save the plot.
+  dpi=300,  # Set the resolution of the saved image.
+  bbox_inches="tight",  # Ensure the entire plot is saved without cropping.
+)
+
+# Display the histogram plot.
 plt.show()

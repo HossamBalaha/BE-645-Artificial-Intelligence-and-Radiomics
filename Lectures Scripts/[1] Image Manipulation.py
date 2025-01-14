@@ -1,51 +1,87 @@
+'''
+========================================================================
+        ╦ ╦┌─┐┌─┐┌─┐┌─┐┌┬┐  ╔╦╗┌─┐┌─┐┌┬┐┬ ┬  ╔╗ ┌─┐┬  ┌─┐┬ ┬┌─┐
+        ╠═╣│ │└─┐└─┐├─┤│││  ║║║├─┤│ ┬ ││└┬┘  ╠╩╗├─┤│  ├─┤├─┤├─┤
+        ╩ ╩└─┘└─┘└─┘┴ ┴┴ ┴  ╩ ╩┴ ┴└─┘─┴┘ ┴   ╚═╝┴ ┴┴─┘┴ ┴┴ ┴┴ ┴
+========================================================================
 # Author: Hossam Magdy Balaha
-# Date: May 20th, 2024
-# Permissions and Citations: Refer to the README file.
+# Initial Creation Date: May 20th, 2024
+# Last Modification Date: Jan 14th, 2025
+# Permissions and Citation: Refer to the README file.
+'''
 
-import cv2
-import matplotlib.pyplot as plt
+# Import necessary libraries.
+import cv2  # For image processing tasks.
+import matplotlib.pyplot as plt  # For displaying images.
 
-caseImgPath = r"Sample Liver Image.bmp"
-caseSegPath = r"Sample Liver Segmentation.bmp"
+# Define the paths to the input image and segmentation mask.
+caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the liver image.
+caseSegPath = r"Data/Sample Liver Segmentation.bmp"  # Path to the liver segmentation mask.
 
-# Load the images.
-caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
-caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
+# Load the images in grayscale mode.
+caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the liver image.
+caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)  # Load the segmentation mask.
 
-# Get the shape of the images.
-caseImgShape = caseImg.shape
-caseSegShape = caseSeg.shape
+# Get the shape (dimensions) of the images.
+caseImgShape = caseImg.shape  # Shape of the liver image.
+caseSegShape = caseSeg.shape  # Shape of the segmentation mask.
 
-print("Image Shape: ", caseImgShape)
-print("Segmentation Shape: ", caseSegShape)
+# Print the shapes of the images.
+print("Image Shape: ", caseImgShape)  # Print the shape of the liver image.
+print("Segmentation Shape: ", caseSegShape)  # Print the shape of the segmentation mask.
 
-# Extract the ROI.
-roi = cv2.bitwise_and(caseImg, caseSeg)
+# Extract the Region of Interest (ROI) using the segmentation mask.
+roi = cv2.bitwise_and(caseImg, caseSeg)  # Apply bitwise AND operation to extract the ROI.
 
-# Crop the ROI.
-x, y, w, h = cv2.boundingRect(roi)
-cropped = roi[y:y + h, x:x + w]
+# Save the extracted ROI to a new image file.
+cv2.imwrite(
+  caseImgPath.replace("Image.bmp", "ROI.bmp"),  # Path to save the ROI image.
+  roi,  # Image to save as the ROI.
+)
 
-# Display the images.
-plt.figure()
-plt.subplot(2, 2, 1)
-plt.imshow(caseImg, cmap="gray")
-plt.title("Image")
-plt.axis("off")
-plt.tight_layout()
-plt.subplot(2, 2, 2)
-plt.imshow(caseSeg, cmap="gray")
-plt.title("Segmentation")
-plt.axis("off")
-plt.tight_layout()
-plt.subplot(2, 2, 3)
-plt.imshow(roi, cmap="gray")
-plt.title("ROI")
-plt.axis("off")
-plt.tight_layout()
-plt.subplot(2, 2, 4)
-plt.imshow(cropped, cmap="gray")
-plt.title("Cropped ROI")
-plt.axis("off")
-plt.tight_layout()
-plt.show()
+# Crop the ROI to remove unnecessary background.
+x, y, w, h = cv2.boundingRect(roi)  # Get the bounding box coordinates of the ROI.
+# x: x-coordinate of the top-left corner of the bounding box.
+# y: y-coordinate of the top-left corner of the bounding box.
+# w: width of the bounding box.
+# h: height of the bounding box.
+cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
+
+# Display the images using matplotlib.
+plt.figure(figsize=(10, 3))  # Create a new figure.
+
+# Display the original liver image.
+plt.subplot(1, 4, 1)  # Create a subplot in the first position.
+plt.imshow(caseImg, cmap="gray")  # Display the liver image in grayscale.
+plt.title("Image")  # Set the title of the subplot.
+plt.axis("off")  # Hide the axes.
+plt.tight_layout()  # Adjust the layout for better visualization.
+
+# Display the segmentation mask.
+plt.subplot(1, 4, 2)  # Create a subplot in the second position.
+plt.imshow(caseSeg, cmap="gray")  # Display the segmentation mask in grayscale.
+plt.title("Segmentation")  # Set the title of the subplot.
+plt.axis("off")  # Hide the axes.
+plt.tight_layout()  # Adjust the layout for better visualization.
+
+# Display the extracted ROI.
+plt.subplot(1, 4, 3)  # Create a subplot in the third position.
+plt.imshow(roi, cmap="gray")  # Display the ROI in grayscale.
+plt.title("ROI")  # Set the title of the subplot.
+plt.axis("off")  # Hide the axes.
+plt.tight_layout()  # Adjust the layout for better visualization.
+
+# Display the cropped ROI.
+plt.subplot(1, 4, 4)  # Create a subplot in the fourth position.
+plt.imshow(cropped, cmap="gray")  # Display the cropped ROI in grayscale.
+plt.title("Cropped ROI")  # Set the title of the subplot.
+plt.axis("off")  # Hide the axes.
+plt.tight_layout()  # Adjust the layout for better visualization.
+
+# Save and display the figure.
+plt.savefig(
+  caseImgPath.replace("Image.bmp", "Manipulation.jpg"),
+  dpi=300,  # Set the resolution of the saved image.
+  bbox_inches="tight",  # Set the bounding box to include the entire figure.
+)  # Save the figure as an image.
+plt.show()  # Display the figure.

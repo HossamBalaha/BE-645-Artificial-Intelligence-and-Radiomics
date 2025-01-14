@@ -1,56 +1,81 @@
+'''
+========================================================================
+        ╦ ╦┌─┐┌─┐┌─┐┌─┐┌┬┐  ╔╦╗┌─┐┌─┐┌┬┐┬ ┬  ╔╗ ┌─┐┬  ┌─┐┬ ┬┌─┐
+        ╠═╣│ │└─┐└─┐├─┤│││  ║║║├─┤│ ┬ ││└┬┘  ╠╩╗├─┤│  ├─┤├─┤├─┤
+        ╩ ╩└─┘└─┘└─┘┴ ┴┴ ┴  ╩ ╩┴ ┴└─┘─┴┘ ┴   ╚═╝┴ ┴┴─┘┴ ┴┴ ┴┴ ┴
+========================================================================
 # Author: Hossam Magdy Balaha
-# Date: May 20th, 2024
-# Permissions and Citations: Refer to the README file.
+# Initial Creation Date: May 20th, 2024
+# Last Modification Date: Jan 14th, 2025
+# Permissions and Citation: Refer to the README file.
+'''
 
-import cv2, os
-import numpy as np
-import nibabel as nib
+# Import necessary libraries.
+import cv2  # For image processing tasks.
+import os  # For file and directory operations.
+import numpy as np  # For numerical operations.
+import nibabel as nib  # For handling NIfTI files.
 
-caseVolPath = r"Sample Volume.nii"
-caseSegPath = r"Sample Segmentation.nii"
+# Define the paths to the input volume and segmentation NIfTI files.
+caseVolPath = r"Data/Sample Volume.nii"  # Path to the volume NIfTI file.
+caseSegPath = r"Data/Sample Segmentation.nii"  # Path to the segmentation NIfTI file.
 
-# Load the NII files.
-caseVol = nib.load(caseVolPath)
-caseSeg = nib.load(caseSegPath)
+# Define the folders to store the extracted slices.
+storageVolFolder = r"Data/Volume Slices"  # Folder to store volume slices.
+storageSegFolder = r"Data/Segmentation Slices"  # Folder to store segmentation slices.
 
-# Get the data from the NII files.
-caseVolData = caseVol.get_fdata()
-caseSegData = caseSeg.get_fdata()
+# Load the NIfTI files.
+caseVol = nib.load(caseVolPath)  # Load the volume NIfTI file.
+caseSeg = nib.load(caseSegPath)  # Load the segmentation NIfTI file.
 
-# Get the shape of the data.
-caseVolShape = caseVolData.shape
-caseSegShape = caseSegData.shape
+# Extract the data arrays from the NIfTI files.
+caseVolData = caseVol.get_fdata()  # Get the volume data as a NumPy array.
+caseSegData = caseSeg.get_fdata()  # Get the segmentation data as a NumPy array.
 
-print("Volume Shape: ", caseVolShape)
-print("Segmentation Shape: ", caseSegShape)
+# Get the shape (dimensions) of the data arrays.
+caseVolShape = caseVolData.shape  # Shape of the volume data.
+caseSegShape = caseSegData.shape  # Shape of the segmentation data.
 
-storageVolFolder = r"Volume Slices"
-storageSegFolder = r"Segmentation Slices"
+# Print the shapes of the data arrays.
+print("Volume Shape: ", caseVolShape)  # Print the shape of the volume data.
+print("Segmentation Shape: ", caseSegShape)  # Print the shape of the segmentation data.
 
-# Create the folders if they don't exist.
+# Create the storage folders if they don't exist.
 if not os.path.exists(storageVolFolder):
-  os.makedirs(storageVolFolder)
+  os.makedirs(storageVolFolder)  # Create the volume slices folder.
 if not os.path.exists(storageSegFolder):
-  os.makedirs(storageSegFolder)
+  os.makedirs(storageSegFolder)  # Create the segmentation slices folder.
 
-# Extract the slices from the volume and the segmentation.
-for i in range(caseVolShape[2]):
-  volSlice = caseVolData[:, :, i]
-  segSlice = caseSegData[:, :, i]
+# Extract and process slices from the volume and segmentation data.
+for i in range(caseVolShape[2]):  # Loop through each slice along the third dimension.
+  # Extract the current slice from the volume and segmentation data.
+  volSlice = caseVolData[:, :, i]  # Extract the volume slice.
+  segSlice = caseSegData[:, :, i]  # Extract the segmentation slice.
 
-  # Rotate the slices.
-  volSlice = np.rot90(volSlice)
-  segSlice = np.rot90(segSlice)
+  # Rotate the slices 90 degrees counterclockwise for better visualization.
+  volSlice = np.rot90(volSlice)  # Rotate the volume slice.
+  segSlice = np.rot90(segSlice)  # Rotate the segmentation slice.
 
-  segSlice[segSlice == 1] = 127
-  segSlice[segSlice == 2] = 255
+  # Modify the segmentation slice to differentiate between labels.
+  # For visualization of both labels, we map label 1 to a grayscale value of 127
+  # and label 2 to a grayscale value of 255.
+  segSlice[segSlice == 1] = 127  # Set label 1 to a grayscale value of 127.
+  segSlice[segSlice == 2] = 255  # Set label 2 to a grayscale value of 255.
 
-  # Save the slices.
+  # For binary segmentation for the liver with the tumor nodes.
+  # segSlice[segSlice == 1] = 255  # Set label 1 to a grayscale value of 255.
+  # segSlice[segSlice == 2] = 255  # Set label 2 to a grayscale value of 255.
+
+  # For binary segmentation for the tumor nodes only.
+  # segSlice[segSlice == 1] = 0  # Set label 1 to a grayscale value of 0.
+  # segSlice[segSlice == 2] = 255  # Set label 2 to a grayscale value of 255.
+
+  # Save the slices as BMP images.
   cv2.imwrite(
-    os.path.join(storageVolFolder, f"Volume Slice {i}.bmp"),
-    volSlice
+    os.path.join(storageVolFolder, f"Volume Slice {i}.bmp"),  # File path for the volume slice.
+    volSlice  # Volume slice data.
   )
   cv2.imwrite(
-    os.path.join(storageSegFolder, f"Segmentation Slice {i}.bmp"),
-    segSlice
+    os.path.join(storageSegFolder, f"Segmentation Slice {i}.bmp"),  # File path for the segmentation slice.
+    segSlice  # Segmentation slice data.
   )

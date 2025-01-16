@@ -21,9 +21,17 @@ allow AI models to assist doctors and healthcare professionals in managing and d
 This series is your gateway to the fascinating world of applying AI techniques to radiomics.
 
 **Full Playlist**:
-Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
-**Videos**:
+> Playlist from Spring 2025: https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
+
+> Old Playlist from Summer 2024: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
+
+**AI-Generated Podcasts (Spring 2025)**:
+
+1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 Recap (AI-Generated Podcast)](https://youtu.be/E1NFmke8FCs)
+1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 Recap (AI-Generated Podcast)](https://youtu.be/TiBbfKyX9AI)
+
+**Videos (Summer 2024)**:
 
 1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 - Introduction](https://youtu.be/pefwr1HP_wA)
 2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 - First Order Features](https://youtu.be/MpCFet8SEC4)
@@ -36,6 +44,7 @@ Link: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 - Machine Learning 3D Example](https://youtu.be/EXaAj1syKvk)
 10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 - Machine Learning 3D Example Part-2](https://youtu.be/bFPzK4QFPQQ)
 11. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 11 - Building & Tuning ML-based System](https://youtu.be/rFFF3PhxMt4)
+
 
 ## Programming Language and Libraries
 

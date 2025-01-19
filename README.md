@@ -22,7 +22,7 @@ This series is your gateway to the fascinating world of applying AI techniques t
 
 **Full Playlist**:
 
-> Playlist from Spring 2025: https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
+> Recent Playlist from Spring 2025: https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
 
 > Old Playlist from Summer 2024: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
@@ -44,7 +44,6 @@ This series is your gateway to the fascinating world of applying AI techniques t
 9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 - Machine Learning 3D Example](https://youtu.be/EXaAj1syKvk)
 10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 - Machine Learning 3D Example Part-2](https://youtu.be/bFPzK4QFPQQ)
 11. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 11 - Building & Tuning ML-based System](https://youtu.be/rFFF3PhxMt4)
-
 
 ## Programming Language and Libraries
 
@@ -129,18 +128,37 @@ Citation for the Liver Tumor Segmentation dataset:
 > Bilic, P., Christ, P., Li, H. B., Vorontsov, E., Ben-Cohen, A., Kaissis, G., ... & Menze, B. (2023). The liver tumor
 > segmentation benchmark (lits). Medical Image Analysis, 84, 102680.
 
+***Breast Ultrasound Images Dataset***
+
+The dataset comprises 780 breast ultrasound images collected in 2018 from 600 female patients aged 25 to 75 years.
+Each image has an average size of 500 x 500 pixels and is stored in PNG format, accompanied by ground truth images for
+reference.
+The dataset is structured into three categories: normal, benign, and malignant.
+
+Dataset Link: https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-images-dataset
+
+More information: Original paper (Dataset of breast ultrasound images) that can be accessed from this
+link: https://doi.org/10.1016/j.dib.2019.104863
+
+Citation for the Breast Ultrasound Images Dataset:
+
+> Al-Dhabyani, W., Gomaa, M., Khaled, H., & Fahmy, A. (2020). Dataset of breast ultrasound images.
+> Data in brief, 28, 104863.
+
+
 ***COVID-19 Radiography Database***
 
 A team of researchers from Qatar University, Doha, the University of Dhaka, and their collaborators from Pakistan and
 Malaysia, in collaboration with medical doctors, developed a comprehensive COVID-19 Radiography Database, which won the
-COVID-19 Dataset Award by the Kaggle Community. Initially, they released a dataset containing 219 COVID-19, 1341 normal,
-and 1,345 viral pneumonia chest X-ray images. Subsequent updates expanded the dataset significantly, with the latest
-update including 3,616 COVID-19 cases, 10,192 normal, 6,012 lung opacity, and 1,345 viral pneumonia images, along with
-corresponding lung masks. This database will be continually updated as new data becomes available. Additionally, Qatar
-University researchers compiled the COVID-QU-Ex dataset, featuring 33,920 chest X-ray images and ground-truth lung
-segmentation masks, making it the largest lung mask dataset created. The dataset includes 11,956 COVID-19, 11,263
-non-COVID infections, and 10,701 normal images, with 2913 COVID-19 infection segmentation masks provided from their
-previous QaTaCov project. The dataset is available on Kaggle for download.
+COVID-19 Dataset Award by the Kaggle Community.
+Initially, they released a dataset containing 219 COVID-19, 1341 normal, and 1,345 viral pneumonia chest X-ray images.
+Subsequent updates expanded the dataset significantly, with the latest update including 3,616 COVID-19 cases,
+10,192 normal, 6,012 lung opacity, and 1,345 viral pneumonia images, along with corresponding lung masks.
+
+Additionally, Qatar University researchers compiled the COVID-QU-Ex dataset, featuring 33,920 chest X-ray images
+and ground-truth lung segmentation masks, making it the largest lung mask dataset created.
+The dataset includes 11,956 COVID-19, 11,263 non-COVID infections, and 10,701 normal images,
+with 2,913 COVID-19 infection segmentation masks provided from their previous QaTaCov project.
 
 Dataset Link: https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database
 

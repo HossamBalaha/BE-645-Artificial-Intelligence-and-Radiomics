@@ -93,8 +93,9 @@ plt.ylabel("Frequency")  # Label the y-axis.
 plt.tight_layout()  # Adjust the layout for better visualization.
 
 # Save the histogram plot as an image file.
+ext = caseImgPath.split(".")[-1]  # Get the file extension of the input image.
 plt.savefig(
-  caseImgPath.replace(".bmp", " Histogram.jpg"),  # Replace the file extension and save the plot.
+  caseImgPath.replace(f".{ext}", f" Histogram.{ext}"),  # Replace the file extension and save the plot.
   dpi=300,  # Set the resolution of the saved image.
   bbox_inches="tight",  # Ensure the entire plot is saved without cropping.
 )

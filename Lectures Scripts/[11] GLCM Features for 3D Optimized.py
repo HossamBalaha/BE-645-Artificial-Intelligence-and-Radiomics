@@ -6,11 +6,12 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 29th, 2024
-# Last Modification Date: Jan 21st, 2025
+# Last Modification Date: Jan 23rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
 # Import necessary libraries.
+import os  # For file path operations.
 import cv2  # For image processing tasks.
 import numpy as np  # For numerical operations.
 
@@ -30,6 +31,10 @@ def ReadVolume(caseImgPaths, caseSegPaths):
 
   # Loop through each slice and its corresponding segmentation mask.
   for i in range(len(caseImgPaths)):
+    # Check if the files exist.
+    if (not os.path.exists(caseImgPaths[i])) or (not os.path.exists(caseSegPaths[i])):
+      raise FileNotFoundError("One or more files were not found. Please check the file paths.")
+
     # Load the slice and segmentation mask in grayscale mode.
     caseImg = cv2.imread(caseImgPaths[i], cv2.IMREAD_GRAYSCALE)  # Load the slice.
     caseSeg = cv2.imread(caseSegPaths[i], cv2.IMREAD_GRAYSCALE)  # Load the segmentation mask.
@@ -40,6 +45,9 @@ def ReadVolume(caseImgPaths, caseSegPaths):
     # Crop the ROI to remove unnecessary background.
     x, y, w, h = cv2.boundingRect(roi)  # Get the bounding box coordinates of the ROI.
     cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
+
+    if (np.sum(cropped) <= 0):
+      raise ValueError("The cropped image is empty. Please check the segmentation mask.")
 
     # Append the cropped slice to the list.
     volumeCropped.append(cropped)
@@ -89,11 +97,23 @@ def CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isSymmetric=False, isNorm
   Returns:
       coMatrix (numpy.ndarray): The calculated 3D GLCM.
   """
-  N = np.max(volume) + 1  # Number of unique intensity levels.
+
+  # Determine the number of unique intensity levels in the volume.
+  minA = np.min(volume)  # Minimum intensity value.
+  maxA = np.max(volume)  # Maximum intensity value.
+  N = maxA - minA + 1  # Number of unique intensity levels.
+
   noOfSlices = volume.shape[0]  # Number of slices in the volume.
 
   # Initialize the 3D co-occurrence matrix with zeros.
   coMatrix = np.zeros((N, N, noOfSlices))
+
+  if (d < 1):
+    raise ValueError("The distance between voxel pairs should be greater than or equal to 1.")
+  elif (d >= noOfSlices):
+    raise ValueError("The distance between voxel pairs should be less than the number of slices.")
+  elif (d >= N):
+    raise ValueError("The distance between voxel pairs should be less than the number of unique intensity levels.")
 
   # Iterate over each voxel in the volume to calculate the GLCM.
   for xLoc in range(volume.shape[2]):  # Loop through columns.
@@ -124,7 +144,8 @@ def CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isSymmetric=False, isNorm
             continue
 
         # Increment the co-occurrence matrix at the corresponding location.
-        coMatrix[volume[endLoc], volume[startLoc]] += 1  # Increment the count for the pair (start, end).
+        # (- minA) is added to work with matrices that does not start from 0.
+        coMatrix[volume[endLoc] - minA, volume[startLoc] - minA] += 1  # Increment the count for the pair (start, end).
 
   # If symmetric, add the transpose of the co-occurrence matrix to itself.
   if (isSymmetric):
@@ -183,6 +204,11 @@ def CalculateGLCMFeatures3D(coMatrix):
         # Calculate the dissimilarity of the co-occurrence matrix.
         dissimilarity += np.abs(i - j) * coMatrix[i, j, k]  # Weighted sum of absolute differences.
 
+  totalSum = np.sum(coMatrix)  # Calculate the sum of all elements in the GLCM.
+  meanX /= totalSum  # Calculate mean of rows.
+  meanY /= totalSum  # Calculate mean of columns.
+  meanZ /= totalSum  # Calculate mean of slices.
+
   # Calculate the standard deviation of rows, columns, and slices.
   stdDevX = 0.0  # Initialize standard deviation of rows.
   stdDevY = 0.0  # Initialize standard deviation of columns.
@@ -214,6 +240,7 @@ def CalculateGLCMFeatures3D(coMatrix):
     "Entropy"      : entropy,  # Entropy of the GLCM.
     "Correlation"  : correlation,  # Correlation of the GLCM.
     "Dissimilarity": dissimilarity,  # Dissimilarity of the GLCM.
+    "TotalSum"     : totalSum,  # Sum of all elements in the GLCM.
     "MeanX"        : meanX,  # Mean of rows.
     "MeanY"        : meanY,  # Mean of columns.
     "MeanZ"        : meanZ,  # Mean of slices.
@@ -236,7 +263,7 @@ caseSegPaths = [
 ]
 
 # Define parameters for the GLCM calculation.
-d = 1  # Distance between voxel pairs.
+d = 2  # Distance between voxel pairs.
 theta = 0  # Angle (in degrees) for the direction of voxel pairs.
 theta = np.radians(theta)  # Convert theta to radians.
 # Keep it False unless you are sure that the GLCM can be transposed.
@@ -262,4 +289,4 @@ features = CalculateGLCMFeatures3D(coMatrix)
 
 # Print the GLCM features.
 for key in features:
-  print(key, ":", features[key])  # Print each feature and its value.
+  print(key, ":", np.round(features[key], 4))  # Print each feature and its value.

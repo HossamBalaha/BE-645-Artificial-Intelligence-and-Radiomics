@@ -11,6 +11,7 @@
 '''
 
 # Import necessary libraries.
+import os  # For file path operations.
 import cv2  # For image processing tasks.
 import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting graphs.
@@ -19,6 +20,10 @@ from skimage.feature import graycomatrix, graycoprops  # For GLCM and texture fe
 # Define the paths to the input image and segmentation mask.
 caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the liver image.
 caseSegPath = r"Data/Sample Liver Segmentation.bmp"  # Path to the liver segmentation mask.
+
+# Check if the files exist.
+if (not os.path.exists(caseImgPath)) or (not os.path.exists(caseSegPath)):
+  raise FileNotFoundError("One or more files were not found. Please check the file paths.")
 
 # Load the images in grayscale mode.
 caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the liver image.
@@ -30,6 +35,9 @@ roi = cv2.bitwise_and(caseImg, caseSeg)  # Apply bitwise AND operation to extrac
 # Crop the ROI to remove unnecessary background.
 x, y, w, h = cv2.boundingRect(roi)  # Get the bounding box coordinates of the ROI.
 cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
+
+if (np.sum(cropped) <= 0):
+  raise ValueError("The cropped image is empty. Please check the segmentation mask.")
 
 # Define parameters for the GLCM calculation.
 d = 1  # Distance between pixel pairs.
@@ -57,11 +65,11 @@ homogeneity = graycoprops(coMatrix[1:, 1:, :, :], "homogeneity")[0, 0]  # Homoge
 ASM = graycoprops(coMatrix[1:, 1:, :, :], "ASM")[0, 0]  # Angular Second Moment (ASM) feature.
 
 # Print the GLCM features.
-print("Contrast: ", contrast)  # Print the contrast feature.
-print("Correlation: ", correlation)  # Print the correlation feature.
-print("Energy: ", energy)  # Print the energy feature.
-print("Homogeneity: ", homogeneity)  # Print the homogeneity feature.
-print("ASM: ", ASM)  # Print the ASM feature.
+print("Contrast: ", np.round(contrast, 4))  # Print the contrast feature.
+print("Correlation: ", np.round(correlation, 4))  # Print the correlation feature.
+print("Energy: ", np.round(energy, 4))  # Print the energy feature.
+print("Homogeneity: ", np.round(homogeneity, 4))  # Print the homogeneity feature.
+print("ASM: ", np.round(ASM, 4))  # Print the ASM feature.
 
 # Display the cropped image and the co-occurrence matrix.
 plt.figure()  # Create a new figure.

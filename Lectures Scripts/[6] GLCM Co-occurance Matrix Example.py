@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 29th, 2024
-# Last Modification Date: Jan 21st, 2025
+# Last Modification Date: Jan 23rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 # Define parameters for the co-occurrence matrix calculation.
 d = 1  # Distance between pixel pairs.
 theta = 0  # Angle (in degrees) for the direction of pixel pairs.
-isSymmetric = True  # Whether to make the co-occurrence matrix symmetric.
+isSymmetric = False  # Whether to make the co-occurrence matrix symmetric.
 
 # Define the input matrix (image).
 A = [
@@ -27,6 +27,14 @@ A = [
   [1, 1, 1, 2, 2],
   [3, 2, 2, 1, 0],
 ]
+# Second example that starts from 1 not 0.
+# A = [
+#   [1, 2, 2, 2, 1],
+#   [4, 5, 6, 2, 5],
+#   [1, 3, 4, 2, 5],
+#   [4, 3, 3, 6, 5],
+#   [4, 3, 1, 2, 1],
+# ]
 A = np.array(A)  # Convert the list to a NumPy array.
 
 # Print the input matrix.
@@ -34,7 +42,9 @@ print("Matrix:")
 print(A)
 
 # Determine the number of unique intensity levels in the matrix.
-N = np.max(A) + 1  # Maximum intensity value + 1.
+minA = np.min(A)  # Minimum intensity value.
+maxA = np.max(A)  # Maximum intensity value.
+N = maxA - minA + 1  # Number of unique intensity levels.
 
 # Initialize the co-occurrence matrix with zeros.
 coMatrix = np.zeros((N, N))  # Create an N x N matrix filled with zeros.
@@ -62,7 +72,8 @@ for xLoc in range(A.shape[1]):  # Loop through columns.
       continue  # Skip this pair if the target is out of bounds.
 
     # Increment the co-occurrence matrix at the corresponding location.
-    coMatrix[A[endLoc], A[startLoc]] += 1  # Increment the count for the pair (start, end).
+    # (- minA) is added to work with matrices that does not start from 0.
+    coMatrix[A[endLoc] - minA, A[startLoc] - minA] += 1  # Increment the count for the pair (start, end).
 
     # Print the current pair and the updated co-occurrence matrix.
     print(
@@ -71,7 +82,7 @@ for xLoc in range(A.shape[1]):  # Loop through columns.
     )
 
 # If symmetric, add the transpose of the co-occurrence matrix to itself.
-if isSymmetric:
+if (isSymmetric):
   coMatrix += coMatrix.T  # Make the co-occurrence matrix symmetric.
 
 # Print the final co-occurrence matrix.

@@ -6,11 +6,12 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 29th, 2024
-# Last Modification Date: Jan 21st, 2025
+# Last Modification Date: Jan 23rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
 # Import necessary libraries.
+import os  # For file path operations.
 import cv2  # For image processing tasks.
 import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting graphs.
@@ -31,8 +32,15 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
   Returns:
       coMatrix (numpy.ndarray): The calculated GLCM.
   """
-  # Determine the number of unique intensity levels in the image.
-  N = np.max(image) + 1  # Maximum intensity value + 1.
+  # Determine the number of unique intensity levels in the matrix.
+  minA = np.min(image)  # Minimum intensity value.
+  maxA = np.max(image)  # Maximum intensity value.
+  N = maxA - minA + 1  # Number of unique intensity levels.
+
+  if (d < 1):
+    raise ValueError("The distance between voxel pairs should be greater than or equal to 1.")
+  elif (d >= N):
+    raise ValueError("The distance between voxel pairs should be less than the number of unique intensity levels.")
 
   # Initialize the co-occurrence matrix with zeros.
   coMatrix = np.zeros((N, N))  # Create an N x N matrix filled with zeros.
@@ -62,7 +70,8 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
           continue
 
       # Increment the co-occurrence matrix at the corresponding location.
-      coMatrix[image[endLoc], image[startLoc]] += 1  # Increment the count for the pair (start, end).
+      # (- minA) is added to work with matrices that does not start from 0.
+      coMatrix[image[endLoc] - minA, image[startLoc] - minA] += 1  # Increment the count for the pair (start, end).
 
   # If symmetric, add the transpose of the co-occurrence matrix to itself.
   if (isSymmetric):
@@ -118,6 +127,10 @@ def CalculateGLCMFeatures(coMatrix):
       meanX += i * coMatrix[i, j]  # Weighted sum of row indices.
       meanY += j * coMatrix[i, j]  # Weighted sum of column indices.
 
+  totalSum = np.sum(coMatrix)  # Calculate the sum of all elements in the GLCM.
+  meanX /= totalSum  # Calculate mean of rows.
+  meanY /= totalSum  # Calculate mean of columns.
+
   # Calculate the standard deviation of rows and columns.
   stdDevX = 0.0  # Initialize standard deviation of rows.
   stdDevY = 0.0  # Initialize standard deviation of columns.
@@ -144,6 +157,7 @@ def CalculateGLCMFeatures(coMatrix):
     "Entropy"      : entropy,  # Entropy of the GLCM.
     "Correlation"  : correlation,  # Correlation of the GLCM.
     "Dissimilarity": dissimilarity,  # Dissimilarity of the GLCM.
+    "TotalSum"     : totalSum,  # Sum of all elements in the GLCM.
     "MeanX"        : meanX,  # Mean of rows.
     "MeanY"        : meanY,  # Mean of columns.
     "StdDevX"      : stdDevX,  # Standard deviation of rows.
@@ -155,6 +169,10 @@ def CalculateGLCMFeatures(coMatrix):
 caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the liver image.
 caseSegPath = r"Data/Sample Liver Segmentation.bmp"  # Path to the liver segmentation mask.
 
+# Check if the files exist.
+if (not os.path.exists(caseImgPath)) or (not os.path.exists(caseSegPath)):
+  raise FileNotFoundError("One or more files were not found. Please check the file paths.")
+
 # Load the images in grayscale mode.
 caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the liver image.
 caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)  # Load the segmentation mask.
@@ -165,6 +183,9 @@ roi = cv2.bitwise_and(caseImg, caseSeg)  # Apply bitwise AND operation to extrac
 # Crop the ROI to remove unnecessary background.
 x, y, w, h = cv2.boundingRect(roi)  # Get the bounding box coordinates of the ROI.
 cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
+
+if (np.sum(cropped) <= 0):
+  raise ValueError("The cropped image is empty. Please check the segmentation mask.")
 
 # Define parameters for the GLCM calculation.
 d = 1  # Distance between pixel pairs.
@@ -189,7 +210,7 @@ features = CalculateGLCMFeatures(coMatrix)
 
 # Print the GLCM features.
 for key in features:
-  print(key, ":", features[key])  # Print each feature and its value.
+  print(key, ":", np.round(features[key], 4))  # Print each feature and its value.
 
 # Display the cropped image and the co-occurrence matrix.
 plt.figure()  # Create a new figure.

@@ -77,12 +77,12 @@ print("Max: ", max)  # Print the maximum value.
 print("Range: ", rng)  # Print the range of values.
 print("Count: ", count)  # Print the total count of values.
 print("Sum: ", sum)  # Print the sum of values.
-print("Mean: ", mean)  # Print the mean value.
-print("Variance: ", variance)  # Print the variance.
-print("Standard Deviation: ", stdDev)  # Print the standard deviation.
-print("Skewness: ", skewness)  # Print the skewness.
-print("Kurtosis: ", kurtosis)  # Print the kurtosis.
-print("Excess Kurtosis: ", exKurtosis)  # Print the excess kurtosis.
+print("Mean: ", np.round(mean, 4))  # Print the mean value.
+print("Variance: ", np.round(variance, 4))  # Print the variance.
+print("Standard Deviation: ", np.round(stdDev, 4))  # Print the standard deviation.
+print("Skewness: ", np.round(skewness, 4))  # Print the skewness.
+print("Kurtosis: ", np.round(kurtosis, 4))  # Print the kurtosis.
+print("Excess Kurtosis: ", np.round(exKurtosis, 4))  # Print the excess kurtosis.
 
 # Plot the histogram.
 plt.figure()  # Create a new figure for the plot.

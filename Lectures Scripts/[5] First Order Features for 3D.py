@@ -150,4 +150,4 @@ for key in summary[0].keys():
   # Extract the values of the current feature from the summary list.
   values = [summary[i][key] for i in range(len(summary))]
   # Print the mean value of the current feature.
-  print(key + ": ", np.mean(values))
+  print(key + ": ", np.round(np.mean(values), 4))

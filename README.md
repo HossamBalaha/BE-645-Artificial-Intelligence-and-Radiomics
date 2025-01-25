@@ -20,16 +20,18 @@ allow AI models to assist doctors and healthcare professionals in managing and d
 
 This series is your gateway to the fascinating world of applying AI techniques to radiomics.
 
-**Full Playlist**:
+**Full Playlists**:
 
-> Recent Playlist from Spring 2025: https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
+> Recent Playlist from Spring 2025 (AI-Generated
+> Podcasts): https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
 
-> Old Playlist from Summer 2024: https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
+> Old Playlist from Summer 2024 (Recorded): https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
 **AI-Generated Podcasts (Spring 2025)**:
 
 1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 Recap (AI-Generated Podcast)](https://youtu.be/E1NFmke8FCs)
-1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 Recap (AI-Generated Podcast)](https://youtu.be/TiBbfKyX9AI)
+2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 Recap (AI-Generated Podcast)](https://youtu.be/TiBbfKyX9AI)
+3. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 Recap (AI-Generated Podcast)](https://youtu.be/Tl-cWlO5p8E)
 
 **Videos (Summer 2024)**:
 
@@ -115,7 +117,7 @@ the libraries._
 
 ***Liver Tumor Segmentation (130 CT Scans for Liver Tumor Segmentation)***
 
-This dataset was extracted from LiTS – Liver Tumor Segmentation Challenge (LiTS17) organised in conjunction with ISBI
+This dataset was extracted from LiTS - Liver Tumor Segmentation Challenge (LiTS17) organised in conjunction with ISBI
 2017 and MICCAI 2017.
 
 Dataset Link: https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation
@@ -123,7 +125,7 @@ Dataset Link: https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation
 More information: Original dataset is The Liver Tumor Segmentation Benchmark (LiTS) that can be accessed from this
 link: https://arxiv.org/abs/1901.04056
 
-Citation for the Liver Tumor Segmentation dataset:
+Citation for the dataset:
 
 > Bilic, P., Christ, P., Li, H. B., Vorontsov, E., Ben-Cohen, A., Kaissis, G., ... & Menze, B. (2023). The liver tumor
 > segmentation benchmark (lits). Medical Image Analysis, 84, 102680.
@@ -140,11 +142,33 @@ Dataset Link: https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-image
 More information: Original paper (Dataset of breast ultrasound images) that can be accessed from this
 link: https://doi.org/10.1016/j.dib.2019.104863
 
-Citation for the Breast Ultrasound Images Dataset:
+Citation for the dataset:
 
 > Al-Dhabyani, W., Gomaa, M., Khaled, H., & Fahmy, A. (2020). Dataset of breast ultrasound images.
 > Data in brief, 28, 104863.
 
+***Brain Tumor Dataset***
+
+This dataset contains 3,064 T1-weighted contrast-enhanced MRI images from 233 patients, categorized into three
+brain tumor types: meningioma (708 slices), glioma (1,426 slices), and pituitary tumor (930 slices).
+The dataset is divided into four subsets, each archived in a `.zip` file containing 766 slices,
+along with 5-fold cross-validation indices for robust evaluation.
+
+Each image is stored in MATLAB (`.mat`) format, including fields such as tumor label, patient ID, image data,
+tumor border coordinates, and a binary tumor mask.
+The images were acquired using a standardized protocol at Nanfang Hospital and General Hospital,
+Tianjin Medical University, China, between 2005 and 2010, with a resolution of 512 x 512 pixels and pixel
+dimensions of 0.49 x 0.49 mm².
+
+Dataset Link: https://figshare.com/articles/dataset/brain_tumor_dataset/1512427
+
+Citations for the dataset:
+
+> Cheng, J., Huang, W., Cao, S., Yang, R., Yang, W., Yun, Z., ... & Feng, Q. (2015). Enhanced performance of brain tumor
+> classification via tumor region augmentation and partition. PloS one, 10(10), e0140381.
+
+> Cheng, J., Yang, W., Huang, M., Huang, W., Jiang, J., Zhou, Y., ... & Chen, W. (2016). Retrieval of brain tumors by
+> adaptive spatial pooling and fisher vector representation. PloS one, 11(6), e0157112.
 
 ***COVID-19 Radiography Database***
 
@@ -162,7 +186,7 @@ with 2,913 COVID-19 infection segmentation masks provided from their previous Qa
 
 Dataset Link: https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database
 
-Citation for the COVID-19 Radiography Database:
+Citation for the database:
 
 > Chowdhury, M. E., Rahman, T., Khandakar, A., Mazhar, R., Kadir, M. A., Mahbub, Z. B., ... & Islam, M. T. (2020). Can
 > AI help in screening viral and COVID-19 pneumonia?. Ieee Access, 8, 132665-132676.
@@ -182,7 +206,7 @@ to support the development of medical foundation models.
 
 Dataset Link: https://zenodo.org/records/10519652
 
-Citation for the MedMNIST+ dataset:
+Citations for the dataset:
 
 > Yang, J., Shi, R., Wei, D., Liu, Z., Zhao, L., Ke, B., ... & Ni, B. (2023). Medmnist v2-a large-scale lightweight
 > benchmark for 2d and 3d biomedical image classification. Scientific Data, 10(1), 41.

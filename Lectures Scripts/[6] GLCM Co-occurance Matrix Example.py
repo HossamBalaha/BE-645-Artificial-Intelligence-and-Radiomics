@@ -97,3 +97,4 @@ plt.colorbar()  # Add a color bar to show intensity values.
 plt.axis("off")  # Hide the axes.
 plt.tight_layout()  # Adjust the layout for better visualization.
 plt.show()  # Display the plot.
+plt.close()  # Close the plot to free up memory.

@@ -100,5 +100,5 @@ plt.savefig(
   bbox_inches="tight",  # Ensure the entire plot is saved without cropping.
 )
 
-# Display the histogram plot.
-plt.show()
+plt.show()  # Display the histogram plot.
+plt.close()  # Close the plot to free up memory.

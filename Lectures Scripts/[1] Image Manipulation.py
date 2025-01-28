@@ -85,3 +85,4 @@ plt.savefig(
   bbox_inches="tight",  # Set the bounding box to include the entire figure.
 )  # Save the figure as an image.
 plt.show()  # Display the figure.
+plt.close()  # Close the figure to free up memory.

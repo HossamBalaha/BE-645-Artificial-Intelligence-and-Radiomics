@@ -228,3 +228,4 @@ plt.colorbar()  # Add a color bar to show intensity values.
 plt.tight_layout()  # Adjust the layout for better visualization.
 
 plt.show()  # Display the figure.
+plt.close()  # Close the figure to free up memory.

@@ -95,3 +95,4 @@ plt.savefig(
   bbox_inches="tight",  # Save the plot as an image file.
 )  # Save the plot as an image file.
 plt.show()  # Display the plot.
+plt.close()  # Close the plot to free up memory.

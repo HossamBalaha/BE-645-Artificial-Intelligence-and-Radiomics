@@ -44,58 +44,82 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
       intensity levels, and the columns correspond to run lengths. If `isNorm` is True,
       the matrix is normalized.
   """
-  # Determine the number of unique intensity levels in the matrix.
-  minA = np.min(matrix)  # Find the minimum intensity value in the matrix.
-  maxA = np.max(matrix)  # Find the maximum intensity value in the matrix.
-  N = maxA - minA + 1  # Calculate the number of unique intensity levels.
-  R = np.max(matrix.shape)  # Determine the maximum possible run length.
+  # Calculate minimum intensity value in the input matrix for intensity range adjustment.
+  minA = np.min(matrix)
+  # Calculate maximum intensity value in the input matrix for intensity range adjustment.
+  maxA = np.max(matrix)
+  # Determine total number of distinct gray levels by calculating intensity range span.
+  N = maxA - minA + 1
+  # Find maximum potential run length based on largest matrix dimension.
+  R = np.max(matrix.shape)
 
-  rlMatrix = np.zeros((N, R))  # Initialize the run-length matrix with zeros.
-  seenMatrix = np.zeros(matrix.shape)  # Initialize a matrix to track seen pixels.
-  # Negative sign is used to ensure the direction is consistent with the angle.
-  dx = -int(np.round(np.cos(theta)))  # Calculate the x-direction step based on theta.
-  dy = int(np.round(np.sin(theta)))  # Calculate the y-direction step based on theta.
+  # Initialize empty GLRLM matrix with dimensions (intensity levels × max run length).
+  rlMatrix = np.zeros((N, R))
+  # Create tracking matrix to prevent duplicate processing of pixels in runs.
+  seenMatrix = np.zeros(matrix.shape)
+  # Calculate x-direction step using cosine (negative for coordinate system alignment).
+  dx = int(np.round(np.cos(theta)))
+  # Calculate y-direction step using sine of the analysis angle.
+  dy = int(np.round(np.sin(theta)))
 
-  for i in range(matrix.shape[0]):  # Iterate over each row in the matrix.
-    for j in range(matrix.shape[1]):  # Iterate over each column in the matrix.
-      # Skip the pixel if it has already been processed.
+  # Adjust direction for specific angles to ensure consistent run direction.
+  if (theta in [np.radians(45), np.radians(135)]):
+    dx = -dx  # Adjust x-direction for 45 and 135 degrees.
+    dy = dy  # Keep y-direction unchanged for 45 and 135 degrees.
+
+  # Iterate through each row index of the input matrix.
+  for i in range(matrix.shape[0]):
+    # Iterate through each column index of the input matrix.
+    for j in range(matrix.shape[1]):
+      # Skip already processed pixels to prevent duplicate counting.
       if (seenMatrix[i, j] == 1):
         continue
 
-      seenMatrix[i, j] = 1  # Mark the current pixel as seen.
-      currentPixel = matrix[i, j]  # Get the intensity value of the current pixel.
-      d = 1  # Initialize the run length distance.
+      # Mark current pixel as processed in tracking matrix.
+      seenMatrix[i, j] = 1
+      # Store intensity value of current pixel for run comparison.
+      currentPixel = matrix[i, j]
+      # Initialize run length counter for current streak.
+      d = 1
 
-      # Check consecutive pixels in the direction specified by theta.
+      # Explore consecutive pixels in specified direction until boundary or value change.
       while (
         (i + d * dy >= 0) and
         (i + d * dy < matrix.shape[0]) and
         (j + d * dx >= 0) and
         (j + d * dx < matrix.shape[1])
       ):
+        # Check if subsequent pixel matches current intensity value.
         if (matrix[i + d * dy, j + d * dx] == currentPixel):
-          seenMatrix[int(i + d * dy), int(j + d * dx)] = 1  # Mark the pixel as seen.
-          d += 1  # Increment the run length distance.
+          # Mark matching pixel as processed in tracking matrix.
+          seenMatrix[int(i + d * dy), int(j + d * dx)] = 1
+          # Increment run length counter for continued streak.
+          d += 1
         else:
-          break  # Stop if the run ends.
+          # Exit loop when streak breaks (different value encountered).
+          break
 
-      # Skip zero-intensity runs if ignoreZeros is True.
+      # Skip zero-value runs if configured to ignore background.
       if (ignoreZeros and (currentPixel == 0)):
         continue
 
-      # Update the run-length matrix.
-      # (- minA) is added to work with matrices that does not start from 0.
+      # Update GLRLM by incrementing count at corresponding intensity-runlength position.
+      # (Adjust intensity index by minimum value for proper matrix positioning)
       rlMatrix[currentPixel - minA, d - 1] += 1
 
+  # Normalize matrix to probability distribution if requested.
   if (isNorm):
-    # Normalize the run-length matrix by dividing by the total number of runs.
+    # Add small epsilon to prevent division by zero in empty matrices.
     rlMatrix = rlMatrix / (np.sum(rlMatrix) + 1e-6)
 
-  return rlMatrix  # Return the computed run-length matrix.
+  # Return computed Gray-Level Run-Length Matrix.
+  return rlMatrix
 
 
-theta = 45  # Set the angle for run-length calculation (0 degrees).
+# Define analysis angle in degrees for run-length direction calculation.
+theta = 90
 
+# Create sample 5x5 matrix with various intensity values for demonstration.
 A = [
   [1, 2, 3, 2, 1],
   [3, 1, 2, 1, 0],
@@ -104,7 +128,7 @@ A = [
   [3, 2, 2, 1, 0],
 ]
 
-# Second example.
+# Alternative sample matrix (commented out for current demonstration).
 # A = [
 #   [1, 2, 2, 2, 1],
 #   [4, 5, 6, 2, 5],
@@ -113,63 +137,76 @@ A = [
 #   [4, 3, 1, 2, 1],
 # ]
 
-# Convert the list to a NumPy array.
+# Convert Python list to NumPy array for matrix operations.
 A = np.array(A)
+# Calculate minimum intensity value for intensity range adjustment.
+minA = np.min(A)
+# Calculate maximum intensity value for intensity range adjustment.
+maxA = np.max(A)
+# Determine total number of distinct intensity levels.
+N = maxA - minA + 1
+# Get maximum possible run length from matrix dimensions.
+R = np.max(A.shape)
+# Convert analysis angle from degrees to radians for trigonometric functions.
+thetaRad = np.radians(theta)
 
-# Determine the number of unique intensity levels in the matrix.
-minA = np.min(A)  # Find the minimum intensity value in the matrix.
-maxA = np.max(A)  # Find the maximum intensity value in the matrix.
-N = maxA - minA + 1  # Calculate the number of unique intensity levels.
-R = np.max(A.shape)  # Determine the maximum possible run length.
-thetaRad = np.radians(theta)  # Convert the angle from degrees to radians.
+# Compute GLRLM with normalization disabled and zero values included.
+rlMatrix = CalculateGLRLMRunLengthMatrix(A, thetaRad, isNorm=False, ignoreZeros=False)
+# Calculate total number of runs in the computed GLRLM.
+rlN = np.sum(rlMatrix)
 
-rlMatrix = CalculateGLRLMRunLengthMatrix(A, thetaRad, isNorm=False, ignoreZeros=False)  # Compute the run-length matrix.
-
-rlN = np.sum(rlMatrix)  # Calculate the total number of runs in the matrix.
-
-# Short Run Emphasis (SRE): Emphasizes shorter runs.
+# Calculate Short Run Emphasis (SRE) using inverse squared run length weights.
 sre = np.sum(
-  rlMatrix / (np.arange(1, R + 1) ** 2),  # Weight each run by the inverse square of its length.
-).sum() / rlN  # Normalize by the total number of runs.
+  rlMatrix / (np.arange(1, R + 1) ** 2),
+).sum() / rlN
 
-# Long Run Emphasis (LRE): Emphasizes longer runs.
+# Calculate Long Run Emphasis (LRE) using squared run length weights.
 lre = np.sum(
-  rlMatrix * (np.arange(1, R + 1) ** 2),  # Weight each run by the square of its length.
-).sum() / rlN  # Normalize by the total number of runs.
+  rlMatrix * (np.arange(1, R + 1) ** 2),
+).sum() / rlN
 
-# Gray Level Non-Uniformity (GLN): Measures the variability of gray levels.
+# Calculate Gray Level Non-Uniformity (GLN) measuring intensity distribution consistency.
 gln = np.sum(
-  np.sum(rlMatrix, axis=1) ** 2,  # Sum of each row (gray level) squared.
-) / rlN  # Normalize by the total number of runs.
+  np.sum(rlMatrix, axis=1) ** 2,
+) / rlN
 
-# Run Length Non-Uniformity (RLN): Measures the variability of run lengths.
+# Calculate Run Length Non-Uniformity (RLN) measuring run length distribution consistency.
 rln = np.sum(
-  np.sum(rlMatrix, axis=0) ** 2,  # Sum of each column (run length) squared.
-) / rlN  # Normalize by the total number of runs.
+  np.sum(rlMatrix, axis=0) ** 2,
+) / rlN
 
-# Run Percentage (RP): Measures the proportion of runs relative to the total number of pixels.
-rp = rlN / np.prod(A.shape)  # Divide the total number of runs by the total number of pixels.
+# Calculate Run Percentage (RP) indicating runs-to-pixels ratio.
+rp = rlN / np.prod(A.shape)
 
-# Low Gray Level Run Emphasis (LGRE): Emphasizes runs with lower gray levels.
+# Calculate Low Gray Level Run Emphasis (LGRE) using inverse squared intensity weights.
 lgre = np.sum(
-  rlMatrix / (np.arange(1, N + 1)[:, None] ** 2),  # Weight each run by the inverse square of its gray level.
-).sum() / rlN  # Normalize by the total number of runs.
+  rlMatrix / (np.arange(1, N + 1)[:, None] ** 2),
+).sum() / rlN
 
-# High Gray Level Run Emphasis (HGRE): Emphasizes runs with higher gray levels.
+# Calculate High Gray Level Run Emphasis (HGRE) using squared intensity weights.
 hgre = np.sum(
-  rlMatrix * (np.arange(1, N + 1)[:, None] ** 2),  # Weight each run by the square of its gray level.
-).sum() / rlN  # Normalize by the total number of runs.
+  rlMatrix * (np.arange(1, N + 1)[:, None] ** 2),
+).sum() / rlN
 
-# Print the run-length matrix.
+# Print raw GLRLM matrix for visual inspection.
 print("Run-Length Matrix:")
 print(rlMatrix)
 
-# Print the computed texture features rounded to 4 decimal places.
-print(f"At angle {theta} degrees:")
-print("Short Run Emphasis:", np.round(sre, 4))
-print("Long Run Emphasis:", np.round(lre, 4))
-print("Gray Level Non-Uniformity:", np.round(gln, 4))
-print("Run Length Non-Uniformity:", np.round(rln, 4))
-print("Run Percentage:", np.round(rp, 4))
-print("Low Gray Level Run Emphasis:", np.round(lgre, 4))
-print("High Gray Level Run Emphasis:", np.round(hgre, 4))
+# Print computed texture features with header showing analysis angle.
+print(f"\nAt angle {theta} degrees:")
+# Print the total number of runs.
+print("Total Runs:", rlN)
+# Print SRE value rounded to 4 decimal places.
+print("Short Run Emphasis (SRE):", np.round(sre, 4))
+# Print LRE value rounded to 4 decimal places.
+print("Long Run Emphasis (LRE):", np.round(lre, 4))
+# Print GLN value rounded to 4 decimal places.
+print("Gray Level Non-Uniformity (GLN):", np.round(gln, 4))
+# Print RLN value rounded to 4 decimal places.
+print("Run Length Non-Uniformity (RLN):", np.round(rln, 4))
+# Print RP value rounded to 4 decimal places.
+print("Run Percentage (RP):", np.round(rp, 4))
+# Print LGRE value rounded to 4 decimal places.
+print("Low Gray Level Run Emphasis (LGRE):", np.round(lgre, 4))
+# Print HGRE value rounded to 4 decimal places.
+print("High Gray Level Run Emphasis (HGRE):", np.round(hgre, 4))

@@ -12,7 +12,7 @@
 
 import numpy as np  # Import the NumPy library for numerical operations.
 
-theta = 45  # Define the angle for scanning direction (0 degrees for horizontal).
+theta = 0  # Define the angle for scanning direction (0 degrees for horizontal).
 
 # Define a sample 5x5 matrix with gray level values.
 A = [

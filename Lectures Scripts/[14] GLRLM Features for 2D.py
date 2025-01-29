@@ -47,54 +47,71 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
       intensity levels, and the columns correspond to run lengths. If `isNorm` is True,
       the matrix is normalized.
   """
-  # Determine the number of unique intensity levels in the matrix.
-  minA = np.min(matrix)  # Find the minimum intensity value in the matrix.
-  maxA = np.max(matrix)  # Find the maximum intensity value in the matrix.
-  N = maxA - minA + 1  # Calculate the number of unique intensity levels.
-  R = np.max(matrix.shape)  # Determine the maximum possible run length.
 
-  rlMatrix = np.zeros((N, R))  # Initialize the run-length matrix with zeros.
-  seenMatrix = np.zeros(matrix.shape)  # Initialize a matrix to track seen pixels.
-  # Negative sign is used to ensure the direction is consistent with the angle.
-  dx = -int(np.round(np.cos(theta)))  # Calculate the x-direction step based on theta.
-  dy = int(np.round(np.sin(theta)))  # Calculate the y-direction step based on theta.
+  # Determine the minimum intensity value present in the input matrix.
+  minA = np.min(matrix)
+  # Determine the maximum intensity value present in the input matrix.
+  maxA = np.max(matrix)
+  # Calculate the total number of distinct gray levels in the matrix.
+  N = maxA - minA + 1
+  # Determine maximum possible run length based on image dimensions.
+  R = np.max(matrix.shape)
 
-  for i in range(matrix.shape[0]):  # Iterate over each row in the matrix.
-    for j in range(matrix.shape[1]):  # Iterate over each column in the matrix.
-      # Skip the pixel if it has already been processed.
+  # Initialize a matrix to count runs of each gray level and length.
+  rlMatrix = np.zeros((N, R))
+  # Create a binary matrix to track processed pixels to avoid double-counting.
+  seenMatrix = np.zeros(matrix.shape)
+  # Compute x-direction movement using cosine of theta (negative for coordinate consistency).
+  dx = -int(np.round(np.cos(theta)))
+  # Compute y-direction movement using sine of theta.
+  dy = int(np.round(np.sin(theta)))
+
+  # Process each pixel in the matrix along the y-axis (rows).
+  for i in range(matrix.shape[0]):
+    # Process each pixel in the matrix along the x-axis (columns).
+    for j in range(matrix.shape[1]):
+      # Skip already processed pixels to prevent redundant counting.
       if (seenMatrix[i, j] == 1):
         continue
 
-      seenMatrix[i, j] = 1  # Mark the current pixel as seen.
-      currentPixel = matrix[i, j]  # Get the intensity value of the current pixel.
-      d = 1  # Initialize the run length distance.
+      # Mark current pixel as processed in the tracking matrix.
+      seenMatrix[i, j] = 1
+      # Store the intensity value of the current pixel.
+      currentPixel = matrix[i, j]
+      # Initialize run length counter for current pixel's streak.
+      d = 1
 
-      # Check consecutive pixels in the direction specified by theta.
+      # Investigate consecutive pixels in specified direction until boundary or value change.
       while (
         (i + d * dy >= 0) and
         (i + d * dy < matrix.shape[0]) and
         (j + d * dx >= 0) and
         (j + d * dx < matrix.shape[1])
       ):
+        # Check if next pixel in direction matches current intensity.
         if (matrix[i + d * dy, j + d * dx] == currentPixel):
-          seenMatrix[int(i + d * dy), int(j + d * dx)] = 1  # Mark the pixel as seen.
-          d += 1  # Increment the run length distance.
+          # Mark matching pixel as processed.
+          seenMatrix[int(i + d * dy), int(j + d * dx)] = 1
+          # Increment run length counter for continued streak.
+          d += 1
         else:
-          break  # Stop if the run ends.
+          # Break loop when streak ends (different value encountered).
+          break
 
-      # Skip zero-intensity runs if ignoreZeros is True.
+      # Skip recording zero-intensity runs if configured to ignore them.
       if (ignoreZeros and (currentPixel == 0)):
         continue
 
-      # Update the run-length matrix.
-      # (- minA) is added to work with matrices that does not start from 0.
+      # Update GLRLM by incrementing count for current gray level-run length pair.
+      # (Adjust gray level index by subtracting minimum value for matrix alignment)
       rlMatrix[currentPixel - minA, d - 1] += 1
 
+  # Normalize matrix to probabilities by dividing by total runs if requested.
   if (isNorm):
-    # Normalize the run-length matrix by dividing by the total number of runs.
     rlMatrix = rlMatrix / (np.sum(rlMatrix) + 1e-6)
 
-  return rlMatrix  # Return the computed run-length matrix.
+  # Return the computed Gray-Level Run-Length Matrix.
+  return rlMatrix
 
 
 def CalculateGLRLMFeatures(rlMatrix, image):
@@ -127,90 +144,106 @@ def CalculateGLRLMFeatures(rlMatrix, image):
       - "High Gray Level Run Emphasis": Emphasizes runs with high gray levels.
   """
 
-  # Determine the number of unique intensity levels in the matrix.
-  minA = np.min(image)  # Find the minimum intensity value in the matrix.
-  maxA = np.max(image)  # Find the maximum intensity value in the matrix.
-  N = maxA - minA + 1  # Calculate the number of unique intensity levels.
-  R = np.max(image.shape)  # Maximum run length.
+  # Determine minimum intensity value in the original image.
+  minA = np.min(image)
+  # Determine maximum intensity value in the original image.
+  maxA = np.max(image)
+  # Calculate total number of distinct gray levels in the image.
+  N = maxA - minA + 1
+  # Get maximum possible run length from image dimensions.
+  R = np.max(image.shape)
 
-  rlN = np.sum(rlMatrix)  # Total number of runs in the matrix.
+  # Calculate total number of runs recorded in the GLRLM.
+  rlN = np.sum(rlMatrix)
 
-  # Short Run Emphasis: Emphasizes short runs in the image.
+  # Calculate Short Run Emphasis (SRE) emphasizing shorter runs through inverse squared weighting.
   sre = np.sum(
     rlMatrix / (np.arange(1, R + 1) ** 2),
   ).sum() / rlN
 
-  # Long Run Emphasis: Emphasizes long runs in the image.
+  # Calculate Long Run Emphasis (LRE) emphasizing longer runs through squared weighting.
   lre = np.sum(
     rlMatrix * (np.arange(1, R + 1) ** 2),
   ).sum() / rlN
 
-  # Gray Level Non-Uniformity: Measures the variability of gray levels.
+  # Calculate Gray Level Non-Uniformity (GLN) measuring gray level distribution consistency.
   gln = np.sum(
-    np.sum(rlMatrix, axis=1) ** 2,  # Sum of each row.
+    np.sum(rlMatrix, axis=1) ** 2,  # Row sums squared
   ) / rlN
 
-  # Run Length Non-Uniformity: Measures the variability of run lengths.
+  # Calculate Run Length Non-Uniformity (RLN) measuring run length distribution consistency.
   rln = np.sum(
-    np.sum(rlMatrix, axis=0) ** 2,  # Sum of each column.
+    np.sum(rlMatrix, axis=0) ** 2,  # Column sums squared
   ) / rlN
 
-  # Run Percentage: Ratio of runs to the total number of pixels.
+  # Calculate Run Percentage (RP) indicating proportion of image occupied by runs.
   rp = rlN / np.prod(image.shape)
 
-  # Low Gray Level Run Emphasis: Emphasizes runs with low gray levels.
+  # Calculate Low Gray Level Run Emphasis (LGRE) weighting low intensities more heavily.
   lgre = np.sum(
     rlMatrix / (np.arange(1, N + 1)[:, None] ** 2),
   ).sum() / rlN
 
-  # High Gray Level Run Emphasis: Emphasizes runs with high gray levels.
+  # Calculate High Gray Level Run Emphasis (HGRE) weighting high intensities more heavily.
   hgre = np.sum(
     rlMatrix * (np.arange(1, N + 1)[:, None] ** 2),
   ).sum() / rlN
 
+  # Package computed features into a dictionary with descriptive keys.
   return {
-    "Short Run Emphasis"          : sre,
-    "Long Run Emphasis"           : lre,
-    "Gray Level Non-Uniformity"   : gln,
-    "Run Length Non-Uniformity"   : rln,
-    "Run Percentage"              : rp,
-    "Low Gray Level Run Emphasis" : lgre,
-    "High Gray Level Run Emphasis": hgre,
-  }  # Return a dictionary of computed features.
+    "Total Runs"                         : rlN,
+    "Short Run Emphasis (SRE)"           : sre,
+    "Long Run Emphasis (LRE)"            : lre,
+    "Gray Level Non-Uniformity (GLN)"    : gln,
+    "Run Length Non-Uniformity (RLN)"    : rln,
+    "Run Percentage (RP)"                : rp,
+    "Low Gray Level Run Emphasis (LGRE)" : lgre,
+    "High Gray Level Run Emphasis (HGRE)": hgre,
+  }
 
 
-caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the input image.
-caseSegPath = r"Data/Sample Liver Segmentation.bmp"  # Path to the segmentation mask.
+# Define path to sample liver image file.
+caseImgPath = r"Data/Sample Liver Image.bmp"
+# Define path to corresponding liver segmentation mask file.
+caseSegPath = r"Data/Sample Liver Segmentation.bmp"
 
-# Check if the files exist.
+# Verify both image and mask files exist before attempting to load.
 if (not os.path.exists(caseImgPath)) or (not os.path.exists(caseSegPath)):
+  # Raise error with descriptive message if any file is missing.
   raise FileNotFoundError("One or more files were not found. Please check the file paths.")
 
-# Load the images.
-caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the grayscale image.
-caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)  # Load the segmentation mask.
+# Load input image as grayscale (single channel intensity values).
+caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
+# Load segmentation mask as grayscale (binary or labeled format).
+caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
 
-# Extract the ROI using the segmentation mask.
+# Extract Region of Interest (ROI) by masking input image with segmentation.
 roi = cv2.bitwise_and(caseImg, caseSeg)
 
-# Crop the ROI to the bounding box of the segmented region.
+# Calculate bounding box coordinates of non-zero region in ROI.
 x, y, w, h = cv2.boundingRect(roi)
+# Crop ROI to tight bounding box around segmented area.
 cropped = roi[y:y + h, x:x + w]
 
-# Check if the cropped image is empty.
+# Validate cropped image contains non-zero pixels to prevent empty processing.
 if (np.sum(cropped) <= 0):
+  # Raise error if cropped image is completely black/empty.
   raise ValueError("The cropped image is empty. Please check the segmentation mask.")
 
-theta = 0  # Angle for run-length matrix calculation.
-thetaRad = np.radians(theta)  # Convert angle to radians.
+# Set analysis angle in degrees for run-length direction.
+theta = 0
+# Convert angle to radians for trigonometric function compatibility.
+thetaRad = np.radians(theta)
 
-# Compute the run-length matrix for the cropped image.
+# Compute GLRLM using cropped ROI and specified parameters.
 rlMatrix = CalculateGLRLMRunLengthMatrix(cropped, thetaRad, isNorm=True, ignoreZeros=True)
 
-# Calculate GLRLM features from the run-length matrix.
+# Extract texture features from the computed GLRLM matrix.
 features = CalculateGLRLMFeatures(rlMatrix, cropped)
 
-# Print the GLRLM features.
+# Print header with current analysis angle in degrees.
 print(f"At angle {theta} degrees:")
+# Iterate through computed features and print formatted values.
 for key in features:
-  print(key, ":", np.round(features[key], 4))  # Print each feature with 4 decimal places.
+  # Print feature name with value rounded to 4 decimal places.
+  print(key, ":", np.round(features[key], 4))

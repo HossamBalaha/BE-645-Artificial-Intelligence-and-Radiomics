@@ -57,6 +57,14 @@ confMatrix = [
 #   [212, 63, 87, 73, 3315],
 # ]
 
+# Example 7: Multiclass classification with imbalanced classes.
+# confMatrix = [
+#   [25, 1, 2, 0],
+#   [3, 35, 3, 3],
+#   [2, 3, 25, 5],
+#   [2, 3, 3, 30],
+# ]
+
 # Convert the confusion matrix to a NumPy array for easier manipulation.
 confMatrix = np.array(confMatrix)
 

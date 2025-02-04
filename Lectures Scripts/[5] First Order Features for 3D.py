@@ -36,18 +36,18 @@ def FirstOrderFeatures(img, mask):
   cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
 
   # Calculate the histogram of the cropped ROI.
-  min = int(np.min(cropped))  # Find the minimum pixel value in the cropped ROI.
-  max = int(np.max(cropped))  # Find the maximum pixel value in the cropped ROI.
+  minVal = int(np.min(cropped))  # Find the minimum pixel value in the cropped ROI.
+  maxVal = int(np.max(cropped))  # Find the maximum pixel value in the cropped ROI.
   hist2D = []  # Initialize an empty list to store the histogram values.
 
-  # Loop through each possible value in the range [min, max].
-  for i in range(min, max + 1):
+  # Loop through each possible value in the range [minVal, maxVal].
+  for i in range(minVal, maxVal + 1):
     hist2D.append(np.count_nonzero(cropped == i))  # Count occurrences of the value `i` in the cropped ROI.
   hist2D = np.array(hist2D)  # Convert the histogram list to a NumPy array.
 
   # Ignore the background (assumed to be the first bin in the histogram).
   hist2D = hist2D[1:]  # Remove the first bin (background).
-  min += 1  # Adjust the minimum value to exclude the background.
+  minVal += 1  # Adjust the minimum value to exclude the background.
 
   # Calculate the total count of values in the histogram before normalization.
   freqCount = np.sum(hist2D)  # Sum all frequencies in the histogram.
@@ -59,13 +59,13 @@ def FirstOrderFeatures(img, mask):
   count = np.sum(hist2D)  # Sum all probabilities in the normalized histogram.
 
   # Determine the range of values in the histogram.
-  rng = np.arange(min, max + 1)  # Create an array of values from `min` to `max`.
+  rng = np.arange(minVal, maxVal + 1)  # Create an array of values from `minVal` to `maxVal`.
 
   # Calculate the sum of values from the histogram.
-  sum = np.sum(hist2D * rng)  # Multiply each value by its frequency and sum the results.
+  sumVal = np.sum(hist2D * rng)  # Multiply each value by its frequency and sum the results.
 
   # Calculate the mean (average) value from the histogram.
-  mean = sum / count  # Divide the total sum by the total count.
+  mean = sumVal / count  # Divide the total sum by the total count.
 
   # Calculate the variance from the histogram.
   variance = np.sum(hist2D * (rng - mean) ** 2) / count  # Measure of the spread of the data.
@@ -84,11 +84,11 @@ def FirstOrderFeatures(img, mask):
 
   # Store the results in a dictionary.
   results = {
-    "Min"            : min,  # Minimum pixel value.
-    "Max"            : max,  # Maximum pixel value.
+    "Min"            : minVal,  # Minimum pixel value.
+    "Max"            : maxVal,  # Maximum pixel value.
     "Count"          : count,  # Total count of pixels after normalization.
     "Frequency Count": freqCount,  # Total count of pixels before normalization.
-    "Sum"            : sum,  # Sum of pixel values.
+    "Sum"            : sumVal,  # Sum of pixel values.
     "Mean"           : mean,  # Mean pixel value.
     "Variance"       : variance,  # Variance of pixel values.
     "StandardDev"    : stdDev,  # Standard deviation of pixel values.
@@ -117,6 +117,10 @@ for i in range(len(volFiles)):
   caseSegPath = os.path.join(
     caseMskPath, volFiles[i].replace("Volume", "Segmentation")  # Path to the segmentation mask.
   )
+
+  # Check if the files exist.
+  if (not os.path.exists(caseImgPath)) or (not os.path.exists(caseSegPath)):
+    raise FileNotFoundError("One or more files were not found. Please check the file paths.")
 
   # Load the volume slice and segmentation mask in grayscale mode.
   caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)  # Load the volume slice.

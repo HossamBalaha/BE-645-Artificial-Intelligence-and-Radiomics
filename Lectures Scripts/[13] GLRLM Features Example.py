@@ -117,7 +117,7 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
 
 
 # Define analysis angle in degrees for run-length direction calculation.
-theta = 90
+theta = 0
 
 # Create sample 5x5 matrix with various intensity values for demonstration.
 A = [
@@ -135,6 +135,15 @@ A = [
 #   [1, 3, 4, 2, 5],
 #   [4, 3, 3, 6, 5],
 #   [4, 3, 1, 2, 1],
+# ]
+
+# Alternative sample matrix (commented out for current demonstration).
+# A = [
+#   [1, 1, 1, 1, 1],
+#   [1, 1, 2, 1, 1],
+#   [1, 1, 2, 1, 1],
+#   [1, 1, 1, 1, 1],
+#   [1, 1, 1, 1, 1],
 # ]
 
 # Convert Python list to NumPy array for matrix operations.

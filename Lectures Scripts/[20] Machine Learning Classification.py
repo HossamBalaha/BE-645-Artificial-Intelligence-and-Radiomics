@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 13th, 2024
-# Last Modification Date: Feb 4th, 2025
+# Last Modification Date: Feb 9th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -19,9 +19,13 @@ from HMB_Helpers import *
 warnings.filterwarnings("ignore")
 
 # Load the data from the specified CSV file.
-filename = r"Records_1000_[0]_[1]_True_True.csv"
-# filename = r"Records_1000_[0, 90, 45, 135]_[1, 2, 3]_True_True.csv"
-storagePath = r"Data/COVID-19 Radiography Database 2D"
+# filename = r"Records_1000_[0]_[1]_True_True.csv"
+# # filename = r"Records_1000_[0, 90, 45, 135]_[1, 2, 3]_True_True.csv"
+# storagePath = r"Data/COVID-19 Radiography Database 2D"
+
+# Load the data from the specified CSV file.
+filename = r"Records_9999_[0]_[1]_True_True.csv"
+storagePath = r"Data/BUSI 2D"
 
 scalers = [
   "Normalizer",  # Normalizer
@@ -38,14 +42,14 @@ models = [
   "AB",  # Adaptive Boosting
   "KNN",  # K-Nearest Neighbors
   "DT",  # Decision Tree
+  "ETs",  # Extra Trees Classifier
+  "SGD",  # Stochastic Gradient Descent
   # You can also use (check GetMLClassificationModelObject function):
   # "SVC",  # Support Vector Classifier
   # "GNB",  # Gaussian Naive Bayes
   # "LR",  # Logistic Regression
-  # "SGD",  # Stochastic Gradient Descent
   # "GB",  # Gradient Boosting Classifier
   # "Bagging",  # Bagging Classifier
-  # "ETs",  # Extra Trees Classifier
   # "XGB",  # eXtreme Gradient Boosting
   # "LGBM",  # Light Gradient Boosting Machine
   # "Voting",  # Voting Classifier
@@ -65,11 +69,13 @@ for modelName in tqdm.tqdm(models):
       )
 
       # Append the model name and scaler name to the metrics dictionary.
-      history.append({
-        "Model" : modelName,
-        "Scaler": scalerName,
-        **metrics,
-      })
+      history.append(
+        {
+          "Model" : modelName,
+          "Scaler": scalerName,
+          **metrics,
+        }
+      )
     except Exception as e:
       print(f"Error: {e}")
 

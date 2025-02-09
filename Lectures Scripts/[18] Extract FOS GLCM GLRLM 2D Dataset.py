@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 29th, 2024
-# Last Modification Date: Feb 3rd, 2025
+# Last Modification Date: Feb 9th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -18,15 +18,31 @@ import pandas as pd  # Import data analysis library.
 from HMB_Helpers import *  # Import custom helper functions from local module.
 
 # Set path to medical imaging dataset (user needs to modify this path).
-datasetPath = r"..\..\Datasets\COVID-19 Radiography Database"
+# datasetPath = r"..\..\Datasets\COVID-19 Radiography Database"
+# # Define list of medical condition categories to process.
+# classes = [
+#   "COVID",
+#   "Normal",
+#   "Viral Pneumonia",
+#   "Lung_Opacity",
+# ]
+# STORAGE_DIR = r"Data/COVID-19 Radiography Database 2D"  # Directory to store extracted features.
+# MASK_POSTFIX = ""  # Postfix for mask files.
+# ALLOWED_REGIONS = 2  # Number of allowed regions in each image.
+# ADD_ROI_IF_NOT_FOUND = False  # Flag to add ROI if not found.
 
+# Set path to medical imaging dataset (user needs to modify this path).
+datasetPath = r"..\..\Datasets\Dataset_BUSI_with_GT"
 # Define list of medical condition categories to process.
 classes = [
-  "COVID",
-  "Normal",
-  "Viral Pneumonia",
-  "Lung_Opacity",
+  "normal",
+  "benign",
+  "malignant",
 ]
+STORAGE_DIR = r"Data/BUSI 2D"  # Directory to store extracted features.
+MASK_POSTFIX = "_mask"  # Postfix for mask files.
+ALLOWED_REGIONS = 1  # Number of allowed regions in each image.
+ADD_ROI_IF_NOT_FOUND = True  # Flag to add ROI if not found.
 
 # Configure image processing parameters and feature extraction settings.
 # THETAS_DEGREE = [0, 90, 45, 135]  # Angles for matrix calculations.
@@ -37,10 +53,10 @@ IGNORE_ZEROS = True  # Flag to exclude zero-valued pixels from calculations.
 APPLY_NORMALIZATION = True  # Flag to enable data normalization.
 # Maximum files to process per category (for testing).
 # Set to a high value (e.g., 99999) to process all files in the dataset.
-MAX_FILES_PER_CATEGORY = 1000
+MAX_FILES_PER_CATEGORY = 9999
+DO_RESIZE = False  # Flag to enable image resizing.
 TARGET_SIZE = (256, 256)  # Target size for image resizing.
 CONTOUR_AREA_THRESHOLD = 0  # Minimum area threshold for contour detection.
-STORAGE_DIR = r"Data/COVID-19 Radiography Database 2D"  # Directory to store extracted features.
 
 # Check if the angles list is empty or contains invalid values.
 if (len(THETAS_DEGREE) == 0) or (not all(isinstance(x, int) for x in THETAS_DEGREE)):
@@ -71,6 +87,9 @@ for cls in classes:
     try:
       # Construct paths to image and segmentation mask files.
       caseImgPath = os.path.join(clsPath, "images", file)
+      if (len(MASK_POSTFIX) > 0):
+        ext = file.split(".")[-1]
+        file = file.replace(f".{ext}", f"{MASK_POSTFIX}.{ext}")
       caseSegPath = os.path.join(clsPath, "masks", file)
 
       # Validate existence of required files before processing.
@@ -81,11 +100,26 @@ for cls in classes:
       caseImg = cv2.imread(caseImgPath, cv2.IMREAD_GRAYSCALE)
       caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)
 
-      # Resize images to target dimensions using cubic interpolation.
-      caseImg = cv2.resize(caseImg, TARGET_SIZE, interpolation=cv2.INTER_CUBIC)
-      caseSeg = cv2.resize(caseSeg, TARGET_SIZE, interpolation=cv2.INTER_CUBIC)
+      if (DO_RESIZE):
+        # Resize images to target dimensions using cubic interpolation.
+        caseImg = cv2.resize(caseImg, TARGET_SIZE, interpolation=cv2.INTER_CUBIC)
+        caseSeg = cv2.resize(caseSeg, TARGET_SIZE, interpolation=cv2.INTER_CUBIC)
+
       # Binarize segmentation mask by thresholding.
       caseSeg[caseSeg > 0] = 255
+
+      if (ADD_ROI_IF_NOT_FOUND):
+        # Check if the segmentation mask is empty.
+        if (np.sum(caseSeg) == 0):
+          # Get the shape of the input image.
+          inputSize = caseImg.shape
+          # Set the mask to be a rectangle in the middle.
+          caseSeg = np.zeros(inputSize[:2], dtype=np.uint8)
+          x = inputSize[1] // 4  # 1/4 of the width.
+          y = inputSize[0] // 4  # 1/4 of the height.
+          w = inputSize[1] // 2  # 1/2 of the width
+          h = inputSize[0] // 2  # 1/2 of the height
+          caseSeg[y:y + h, x:x + w] = 255
 
       # Extract regions of interest from medical images.
       regions = ExtractMultipleObjects(
@@ -95,7 +129,7 @@ for cls in classes:
       )
 
       # Validate number of detected regions.
-      if (len(regions) != 2):
+      if (len(regions) != ALLOWED_REGIONS):
         print(f"File: {file} contains {len(regions)} regions. Skipping...")
         continue
 

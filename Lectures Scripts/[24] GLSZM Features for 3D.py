@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 13th, 2024
-# Last Modification Date: Feb 11th, 2025
+# Last Modification Date: Feb 13th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -305,27 +305,26 @@ def CalculateGLSZMFeatures(szMatrix, data, N, Z):
   zp = szN / np.prod(data.shape)
 
   # Gray Level Variance.
-  glv = (
-    # Weight each gray level by its squared value.
-    np.sum((np.arange(N) ** 2) * np.sum(szMatrix, axis=1), ) -
-    # Subtract the squared mean gray level to calculate variance.
-    (np.sum((np.arange(N) * np.sum(szMatrix, axis=1)), ) ** 2)
-  )
+  glv = np.sum(
+    # Compute variance for each gray level.
+    (np.sum(szMatrix, axis=1)) *
+    ((np.arange(1, N + 1) - np.mean(np.arange(1, N + 1))) ** 2),
+  ) / szN  # Normalize by the total number of zones.
+
   # Zone Size Variance.
-  zsv = (
-    # Weight each zone size by its squared value.
-    np.sum((np.arange(Z) ** 2) * np.sum(szMatrix, axis=0), ) -
-    # Subtract the squared mean zone size to calculate variance.
-    (np.sum((np.arange(Z) * np.sum(szMatrix, axis=0)), ) ** 2)
-  )
+  zsv = np.sum(
+    # Compute variance for zone sizes.
+    (np.sum(szMatrix, axis=0)) *
+    ((np.arange(1, Z + 1) - np.mean(np.arange(1, Z + 1))) ** 2),
+  ) / szN  # Normalize by the total number of zones.
 
   # Zone Size Entropy.
-  # Adding 1e-10 to avoid log(0).
-  zse = -np.sum(
+  log = np.log2(szMatrix)
+  log[log == -np.inf] = 0  # Replace -inf with 0.
+  zse = np.sum(
     # Compute entropy for zone sizes.
-    (np.sum(szMatrix, axis=0) / szN) *
-    np.log(np.sum(szMatrix, axis=0) / szN + 1e-10),
-  )
+    szMatrix * log,
+  ) / szN  # Normalize by the total number of zones.
 
   # Low Gray Level Zone Emphasis.
   lgze = np.sum(

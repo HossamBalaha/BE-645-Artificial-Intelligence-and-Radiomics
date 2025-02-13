@@ -18,7 +18,7 @@ import numpy as np  # For numerical operations.
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
-sys.setrecursionlimit(10 ** 6)
+sys.setrecursionlimit(10 ** 8)
 
 
 def FindConnectedRegions(image, connectivity=4):

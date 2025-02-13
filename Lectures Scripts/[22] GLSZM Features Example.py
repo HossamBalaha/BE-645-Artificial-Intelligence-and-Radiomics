@@ -196,19 +196,19 @@ A = [
 ]  # Define a 2D list representing the input image matrix.
 
 # Example input matrix for testing.
-A = [
-  [1, 2, 2, 2, 1],
-  [4, 4, 3, 2, 5],
-  [1, 3, 4, 2, 5],
-  [4, 3, 3, 4, 2],
-  [4, 3, 1, 2, 4]
-]
+# A = [
+#   [1, 2, 2, 2, 1],
+#   [4, 4, 3, 2, 5],
+#   [1, 3, 4, 2, 5],
+#   [4, 3, 3, 4, 2],
+#   [4, 3, 1, 2, 4]
+# ]
 
 # Convert the input list to a NumPy array for easier manipulation.
 A = np.array(A)
 
 # Set the connectivity type (4 or 8).
-C = 4
+C = 8
 
 # Calculate the size-zone matrix for the input matrix using C-connectivity.
 szMatrix, szDict, N, Z = CalculateGLSZMSizeZoneMatrix(A, connectivity=C)

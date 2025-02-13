@@ -398,7 +398,7 @@ caseSegPaths = [
 volumeCropped = ReadVolume(caseImgPaths, caseSegPaths)
 
 # Set the connectivity type (6 or 26).
-C = 26
+C = 6
 
 # Calculate the Size-Zone Matrix.
 szMatrix, szDict, N, Z = CalculateGLSZM3DSizeZoneMatrix(

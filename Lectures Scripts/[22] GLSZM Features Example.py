@@ -256,8 +256,9 @@ zsv = np.sum(
 ) / szN  # Normalize by the total number of zones.
 
 # Zone Size Entropy.
-log = np.log2(szMatrix)
+log = np.log2(szMatrix + 1e-10)  # Compute log base 2 of the size-zone matrix.
 log[log == -np.inf] = 0  # Replace -inf with 0.
+log[log < 0] = 0  # Replace negative values with 0.
 zse = np.sum(
   # Compute entropy for zone sizes.
   szMatrix * log,

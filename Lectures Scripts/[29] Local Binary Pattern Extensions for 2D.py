@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 20th, 2024
-# Last Modification Date: Feb 17th, 2025
+# Last Modification Date: Feb 24th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -292,6 +292,11 @@ roi = cv2.bitwise_and(caseImg, caseSeg)
 x, y, w, h = cv2.boundingRect(roi)
 # Crop ROI to tight bounding box around segmented area.
 cropped = roi[y:y + h, x:x + w]
+
+# Validate cropped image contains non-zero pixels to prevent empty processing.
+if (np.sum(cropped) <= 0):
+  # Raise error if cropped image is completely black/empty.
+  raise ValueError("The cropped image is empty. Please check the segmentation mask.")
 
 # Set the parameters for the LBP computation.
 distanceLBP = 1  # Distance from the center pixel to the surrounding pixels.

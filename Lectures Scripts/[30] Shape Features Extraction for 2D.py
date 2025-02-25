@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 19th, 2024
-# Last Modification Date: Feb 24th, 2025
+# Last Modification Date: Feb 25th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -48,16 +48,16 @@ def ShapeFeatures(matrix):
   perimeter = cv2.arcLength(largestContour, True)
 
   # 3. Centroid.
-  # Computes moments of the largest contour.
-  moments = cv2.moments(largestContour)
+  # Computes moments of the matrix.
+  moments = cv2.moments(matrix)
   # Calculates the X-coordinate of the centroid.
   centroidX = int(moments["m10"] / moments["m00"])
   # Calculates the Y-coordinate of the centroid.
   centroidY = int(moments["m01"] / moments["m00"])
 
   # 4. Bounding Box.
-  # Recalculates the bounding box for the largest contour.
-  x, y, w, h = cv2.boundingRect(largestContour)
+  # Recalculates the bounding box for the matrix.
+  x, y, w, h = cv2.boundingRect(matrix)
 
   # 5. Aspect Ratio.
   # Computes the aspect ratio of the bounding box.
@@ -127,6 +127,7 @@ def ShapeFeatures(matrix):
   # 18. Convexity.
   # Convexity measures how close the shape is to being convex.
   # It is the ratio of the perimeter of the convex hull to the perimeter of the shape.
+  # True: The contour is closed, False: The contour is open.
   convexHullPerimeter = cv2.arcLength(smallestConvexHull, True)
   convexity = convexHullPerimeter / perimeter
 

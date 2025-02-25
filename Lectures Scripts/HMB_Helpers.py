@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jan 29th, 2025
-# Last Modification Date: Feb 24th, 2025
+# Last Modification Date: Feb 25th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -14,6 +14,7 @@
 import cv2  # For image processing tasks.
 import sys  # For system-specific parameters and functions.
 import os  # For file path operations.
+import trimesh  # For 3D mesh processing.
 import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting images.
 import pandas as pd  # For data manipulation and analysis.
@@ -374,6 +375,90 @@ def ReadVolume(caseImgPaths, caseSegPaths):
   volumeCropped = np.array(volumeCropped)
 
   return volumeCropped  # Return the preprocessed 3D volume.
+
+
+def ReadVolumeAdcanced(caseImgPaths, caseSegPaths, specificClasses=[]):
+  """
+  Read and preprocess a 3D volume from a set of 2D slices and their corresponding segmentation masks.
+
+  Args:
+      caseImgPaths (list): List of file paths to medical image slices in BMP format.
+      caseSegPaths (list): List of file paths to segmentation masks matching the slices.
+      specificClasses (list): List of specific classes to include in the segmentation.
+        If empty, all classes are included.
+
+  Returns:
+      volumeCropped (numpy.ndarray): 3D array of preprocessed and aligned medical imaging data.
+  """
+  # Initialize empty list to store processed slices.
+  volumeCropped = []
+
+  # Process each image-segmentation pair in the input lists.
+  for i in range(len(caseImgPaths)):
+    # Verify both image and segmentation files exist before processing.
+    if (not os.path.exists(caseImgPaths[i])) or (not os.path.exists(caseSegPaths[i])):
+      raise FileNotFoundError("One or more files were not found. Please check the file paths.")
+
+    # Load grayscale medical image slice (8-bit depth).
+    caseImg = cv2.imread(caseImgPaths[i], cv2.IMREAD_GRAYSCALE)
+    # Load corresponding binary segmentation mask.
+    caseSeg = cv2.imread(caseSegPaths[i], cv2.IMREAD_GRAYSCALE)
+
+    # Check if specific classes are provided for segmentation.
+    if (specificClasses):
+      # Create a mask for the specific classes.
+      mask = np.zeros_like(caseSeg)
+      for classId in specificClasses:
+        mask[caseSeg == classId] = 255
+      caseSeg = mask
+
+    # Extract region of interest using bitwise AND operation between image and mask.
+    roi = cv2.bitwise_and(caseImg, caseSeg)
+
+    # Calculate bounding box coordinates of non-zero region in ROI.
+    x, y, w, h = cv2.boundingRect(roi)
+    # Crop image to tight bounding box around segmented area.
+    cropped = roi[y:y + h, x:x + w]
+
+    # Validate cropped slice contains actual data (not just background).
+    if (np.sum(cropped) <= 0):
+      continue  # Skip empty slices.
+
+    # Add processed slice to volume list.
+    volumeCropped.append(cropped)
+
+  # Check if any slices were successfully processed.
+  if (len(volumeCropped) == 0):
+    raise ValueError("No slices were successfully processed. Please check the input data.")
+
+  # Determine maximum dimensions across all slices for padding alignment.
+  maxWidth = np.max([cropped.shape[1] for cropped in volumeCropped])
+  maxHeight = np.max([cropped.shape[0] for cropped in volumeCropped])
+
+  # Standardize slice dimensions through symmetric padding.
+  for i in range(len(volumeCropped)):
+    # Calculate required padding for width and height dimensions.
+    deltaWidth = maxWidth - volumeCropped[i].shape[1]
+    deltaHeight = maxHeight - volumeCropped[i].shape[0]
+
+    # Apply padding to create uniform slice dimensions.
+    padded = cv2.copyMakeBorder(
+      volumeCropped[i],
+      deltaHeight // 2,  # Top padding (integer division)
+      deltaHeight - deltaHeight // 2,  # Bottom padding (remainder)
+      deltaWidth // 2,  # Left padding
+      deltaWidth - deltaWidth // 2,  # Right padding
+      cv2.BORDER_CONSTANT,  # Padding style (constant zero values)
+      value=0
+    )
+
+    # Update volume with padded slice.
+    volumeCropped[i] = padded.copy()
+
+  # Convert list of 2D slices into 3D numpy array (z, y, x).
+  volumeCropped = np.array(volumeCropped)
+
+  return volumeCropped
 
 
 def CalculateGLCM3DCooccuranceMatrix(volume, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True):
@@ -1739,6 +1824,120 @@ def ShapeFeatures(matrix):
     "Curvature"          : averageCurvature,
     "Std Curvature"      : stdCurvature,
   }
+
+
+def ShapeFeatures3D(volume):
+  """
+  Calculate 3D shape features of a given binary or labeled volume.
+  The function computes various geometric and topological properties such as volume,
+  surface area, compactness, sphericity, elongation, flatness, rectangularity,
+  spherical disproportion, and Euler number. These features are derived from the
+  mesh representation of the input volume using marching cubes.
+
+  Args:
+    volume (numpy.ndarray): A 3D binary or labeled matrix representing the object.
+
+  Returns:
+    dict: A dictionary containing the calculated 3D shape features.
+  """
+
+  # Converts an (n, m, p) matrix into a mesh, using marching_cubes.
+  # Marching cubes algorithm generates a triangular mesh from the volume data.
+  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volume)
+
+  # 1. Volume.
+  # Computes the total number of non-zero voxels in the volume.
+  volume = np.sum(volume)
+
+  # 2. Surface Area.
+  # Calculates the total surface area of the mesh generated by marching cubes.
+  surfaceArea = mesh.area
+
+  # 3. Surface to Volume Ratio.
+  # Measures the ratio of surface area to volume, indicating compactness.
+  surfaceToVolumeRatio = surfaceArea / volume
+
+  # 4. Compactness.
+  # Quantifies how closely the shape resembles a sphere, based on volume and surface area.
+  compactness = (volume ** (2 / 3)) / (6 * np.sqrt(np.pi) * surfaceArea)
+
+  # 5. Sphericity.
+  # Measures how spherical the shape is, normalized by volume and surface area.
+  sphericity = (np.pi ** (1 / 3)) * ((6 * volume) ** (2 / 3)) / surfaceArea
+
+  # Bounding Box.
+  # Computes the bounding box of the mesh and extracts its dimensions.
+  bbox = mesh.bounding_box.bounds
+  Lmax = np.max(bbox[1] - bbox[0])  # Maximum length of the bounding box.
+  Lmin = np.min(bbox[1] - bbox[0])  # Minimum length of the bounding box.
+  Lint = np.median(bbox[1] - bbox[0])  # Intermediate length of the bounding box.
+
+  # 6. Elongation.
+  # Measures the ratio of the longest dimension to the shortest dimension of the bounding box.
+  elongation = Lmax / Lmin
+
+  # 7. Flatness.
+  # Measures the ratio of the shortest dimension to the intermediate dimension of the bounding box.
+  flatness = Lmin / Lint
+
+  # 8. Rectangularity.
+  # Measures how efficiently the shape fills its bounding box, as the ratio of volume to bounding box volume.
+  bboxVolume = np.prod(bbox[1] - bbox[0])  # Volume of the bounding box.
+  rectangularity = volume / bboxVolume
+
+  # 9. Euler Number.
+  # Represents the topological characteristic of the shape, computed from the mesh.
+  eulerNumber = mesh.euler_number
+
+  # Return all calculated features as a dictionary.
+  return {
+    "Volume"                 : volume,
+    "Surface Area"           : surfaceArea,
+    "Surface to Volume Ratio": surfaceToVolumeRatio,
+    "Compactness"            : compactness,
+    "Sphericity"             : sphericity,
+    "Elongation"             : elongation,
+    "Flatness"               : flatness,
+    "Rectangularity"         : rectangularity,
+    "Euler Number"           : eulerNumber
+  }
+
+
+def ExtractAllFeatures2D(
+  matrix,
+  whichFeatures=["Shape", "FOS", "GLCM", "GLRLM", "GLSZM", "LBP"],
+  glcmDistances=[1],
+  glcmAngles=[0],
+  glrlmAngles=[0],
+  glszmConnectivities=[4],
+  lbpDistances=[1],
+  ignoreZeros=True,
+  isNorm=True,
+):
+  # THIS FUNCTION IS NOT COMPLETE, BEING WRITTEN BY THE AUTHOR (HMB).
+
+  features = {}
+  if ("FOS" in whichFeatures):
+    # Calculate first-order statistical features.
+    fos = FirstOrderFeatures(
+      matrix,  # Image to extract features from.
+      isNorm=isNorm,  # Flag to enable data normalization.
+      ignoreZeros=ignoreZeros,  # Flag to exclude zero-valued pixels.
+    )
+    features["FOS"] = fos  # Store first-order features in the dictionary.
+
+  if ("GLCM" in whichFeatures):
+    for j, distance in enumerate(DISTANCES):
+      for k, theta in enumerate(thetasRad):
+        # Calculate Gray-Level Co-occurrence Matrix (GLCM).
+        glcm = CalculateGLCMCooccuranceMatrix(
+          cropped, distance, theta,
+          isNorm=APPLY_NORMALIZATION,  # Flag to enable data normalization.
+          ignoreZeros=IGNORE_ZEROS,  # Flag to exclude zero-valued pixels.
+        )
+
+        # Extract texture features from GLCM.
+        glcmFeatures = CalculateGLCMFeatures(glcm)
 
 
 def PerformanceMetrics(confMatrix, eps=1e-10):

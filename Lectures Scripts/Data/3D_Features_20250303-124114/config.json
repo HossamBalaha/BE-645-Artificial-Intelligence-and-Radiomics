@@ -1,0 +1,16 @@
+{
+    "APPLY_NORMALIZATION": true,
+    "IGNORE_ZEROS": true,
+    "GLCM_THETAS": [
+        0
+    ],
+    "GLCM_DISTANCES": [
+        1
+    ],
+    "GLRLM_THETAS": [
+        0
+    ],
+    "CURRENT_TIMESTAMP": "20250303-124114",
+    "STORAGE_DIR": "Data/3D_Features_20250303-124114",
+    "SPLIT": "train"
+}

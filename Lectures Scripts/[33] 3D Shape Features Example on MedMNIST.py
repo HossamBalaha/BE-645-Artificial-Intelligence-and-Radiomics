@@ -11,7 +11,6 @@
 '''
 
 # Import necessary libraries.
-import os
 import trimesh
 import numpy as np
 from medmnist import AdrenalMNIST3D

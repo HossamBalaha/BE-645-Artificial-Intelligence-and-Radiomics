@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jan 29th, 2025
-# Last Modification Date: Feb 25th, 2025
+# Last Modification Date: Mar 3rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -21,6 +21,11 @@ import pandas as pd  # For data manipulation and analysis.
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import LabelEncoder
+import nibabel as nib  # For handling NIfTI files.
+from sklearn.ensemble import *
+from sklearn.decomposition import *
+from sklearn.feature_selection import *
+from sklearn.discriminant_analysis import *
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
@@ -77,6 +82,114 @@ def ExtractMultipleObjects(image, mask, cntAreaThreshold=0):
 
   # Return list of extracted object images.
   return regions
+
+
+def ConvertNII2BMP(filePath, storageBaseFolder, storeTrimesh=True):
+  """
+  Convert NIfTI files to BMP images.
+
+  Args:
+    filePath (str): Path to the NIfTI file.
+    storageBaseFolder (str): Base folder to store the BMP images.
+    storeTrimesh (bool): Whether to store the 3D mesh as STL.
+
+  Returns:
+    volumeCropped (numpy.ndarray): Processed volume data.
+  """
+  # Load the NIfTI file.
+  nii = nib.load(filePath)  # Load the NIfTI file using nibabel.
+  data = nii.get_fdata()  # Get the data from the NIfTI file.
+
+  # Get the shape (dimensions) of the data array.
+  shape = data.shape  # Shape of the data array.
+
+  # Create the storage folder if they don't exist.
+  fileNameNoExt = os.path.splitext(os.path.basename(filePath))[0]  # Get the file name without extension.
+  storageFolder = os.path.join(storageBaseFolder, fileNameNoExt)  # Create a base folder for BMP images.
+
+  # Create the folder if it doesn't exist.
+  os.makedirs(storageFolder, exist_ok=True)
+
+  # Create a list to store the cropped volume slices.
+  volumeCropped = []
+
+  # Loop through each slice along the third dimension.
+  for i in range(shape[2]):  # Loop through each slice.
+    slice = data[:, :, i]  # Extract the current slice from the data array.
+
+    # Rotate the slice 90 degrees counterclockwise for better visualization.
+    slice = np.rot90(slice)  # Rotate the slice.
+
+    # Normalize the slice to the range [0, 255] for BMP format.
+    slice = cv2.normalize(slice, None, 0, 255, cv2.NORM_MINMAX)  # Normalize the slice.
+
+    # Convert the slice to uint8 data type for BMP format.
+    slice = slice.astype(np.uint8)  # Convert the slice to uint8.
+
+    # Check if the slice is empty (all zeros).
+    if (np.sum(slice) == 0):  # Check if the slice is empty.
+      continue  # Skip empty slices.
+
+    # Calculate bounding box coordinates of non-zero region in ROI.
+    x, y, w, h = cv2.boundingRect(slice)
+
+    # Crop image to tight bounding box around segmented area.
+    cropped = slice[y:y + h, x:x + w]
+
+    # Validate cropped slice contains actual data (not just background).
+    if (np.sum(cropped) <= 0):
+      continue  # Skip empty slices.
+
+    # Add processed slice to volume list.
+    volumeCropped.append(cropped)
+
+    # Save the slice as a BMP image.
+    cv2.imwrite(os.path.join(storageFolder, f"Slice {i}.bmp"), slice)
+
+  # Check if any slices were successfully processed.
+  if (len(volumeCropped) == 0):
+    raise ValueError("No slices were successfully processed. Please check the input data.")
+
+  # Determine maximum dimensions across all slices for padding alignment.
+  maxWidth = np.max([cropped.shape[1] for cropped in volumeCropped])
+  maxHeight = np.max([cropped.shape[0] for cropped in volumeCropped])
+
+  # Standardize slice dimensions through symmetric padding.
+  for i in range(len(volumeCropped)):
+    # Calculate required padding for width and height dimensions.
+    deltaWidth = maxWidth - volumeCropped[i].shape[1]
+    deltaHeight = maxHeight - volumeCropped[i].shape[0]
+
+    # Apply padding to create uniform slice dimensions.
+    padded = cv2.copyMakeBorder(
+      volumeCropped[i],
+      deltaHeight // 2,  # Top padding (integer division)
+      deltaHeight - deltaHeight // 2,  # Bottom padding (remainder)
+      deltaWidth // 2,  # Left padding
+      deltaWidth - deltaWidth // 2,  # Right padding
+      cv2.BORDER_CONSTANT,  # Padding style (constant zero values)
+      value=0
+    )
+
+    # Update volume with padded slice.
+    volumeCropped[i] = padded.copy()
+
+  # Convert list of 2D slices into 3D numpy array (z, y, x).
+  volumeCropped = np.array(volumeCropped)
+
+  # Save the 3D volume as a .npy file.
+  np.save(os.path.join(storageBaseFolder, f"{fileNameNoExt}_Volume.npy"), volumeCropped)
+
+  if (storeTrimesh):
+    # Create a 3D mesh from the preprocessed volume data.
+    mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volumeCropped)
+
+    # Export the 3D mesh to an STL file.
+    # Open using: https://www.viewstl.com/
+    mesh.export(os.path.join(storageBaseFolder, f"{fileNameNoExt}_Volume.stl"))
+
+  # Return the processed volume data.
+  return volumeCropped
 
 
 def FirstOrderFeatures(matrix, isNorm=True, ignoreZeros=True):
@@ -161,6 +274,37 @@ def FirstOrderFeatures(matrix, isNorm=True, ignoreZeros=True):
   }
 
   return results
+
+
+def FirstOrderFeatures3D(volume, isNorm=True, ignoreZeros=True):
+  """
+  Calculate first-order statistical features from a 3D volume.
+
+  Args:
+      volume (numpy.ndarray): The input 3D volume for which features are to be calculated.
+      isNorm (bool): Whether to normalize the histogram. Default is True.
+      ignoreZeros (bool): Whether to ignore zero values in the histogram. Default is True.
+
+  Returns:
+      results (dict): A dictionary containing the calculated first-order features.
+  """
+  results = []
+
+  # Loop through each slice in the 3D volume.
+  for i in range(volume.shape[0]):  # Loop through each slice.
+    # Calculate first-order features for the current slice.
+    sliceResults = FirstOrderFeatures(volume[i], isNorm, ignoreZeros)  # Calculate features for the slice.
+    # Append the results to the list.
+    results.append(sliceResults)  # Add the slice results to the list.
+
+  # Convert the list of results to a DataFrame for easier manipulation.
+  results = pd.DataFrame(results)  # Convert the list to a DataFrame.
+  # Calculate the mean of each feature across all slices.
+  results = results.mean(axis=0)  # Calculate the mean of each feature.
+  # Convert the results to a dictionary.
+  results = results.to_dict()  # Convert the DataFrame to a dictionary.
+
+  return results  # Return the calculated features.
 
 
 def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True):
@@ -2005,7 +2149,8 @@ def PerformanceMetrics(confMatrix, eps=1e-10):
     "Macro Recall"     : recall,
     "Macro F1"         : f1,
     "Macro Accuracy"   : accuracy,
-    "Macro Specificity": specificity
+    "Macro Specificity": specificity,
+    "Macro Average"    : np.mean([precision, recall, f1, accuracy, specificity])
   })
 
   # Calculate precision using micro averaging: sum of TP divided by the sum of TP and FP.
@@ -2025,7 +2170,8 @@ def PerformanceMetrics(confMatrix, eps=1e-10):
     "Micro Recall"     : recall,
     "Micro F1"         : f1,
     "Micro Accuracy"   : accuracy,
-    "Micro Specificity": specificity
+    "Micro Specificity": specificity,
+    "Micro Average"    : np.mean([precision, recall, f1, accuracy, specificity])
   })
 
   # Calculate the number of samples per class by summing the rows of the confusion matrix.
@@ -2057,7 +2203,8 @@ def PerformanceMetrics(confMatrix, eps=1e-10):
     "Weighted Recall"     : recall,
     "Weighted F1"         : f1,
     "Weighted Accuracy"   : accuracy,
-    "Weighted Specificity": specificity
+    "Weighted Specificity": specificity,
+    "Weighted Average"    : np.mean([precision, recall, f1, accuracy, specificity])
   })
 
   # Return the calculated metrics as a dictionary.
@@ -2158,6 +2305,96 @@ def GetMLClassificationModelObject(modelName, hyperparameters={}):
     raise ValueError("Invalid model name.")
 
 
+def PerformFeatureSelection(tech, noOfFeaturesRatio, xTrain, yTrain, xTest, yTest):
+  """
+  Perform feature selection based on the specified technique.
+
+  Args:
+      tech (str): Feature selection technique to use. Options include:
+          - "PCA": Principal Component Analysis.
+          - "LDA": Linear Discriminant Analysis.
+          - "RF": Random Forest feature importance.
+          - "RFE": Recursive Feature Elimination.
+          - "Chi2": Chi-squared test.
+          Default is None (no feature selection).
+      noOfFeaturesRatio (float): Ratio of features to select (0 < noOfFeaturesRatio <= 100).
+      xTrain (array-like): Training data.
+      yTrain (array-like): Training labels.
+      xTest (array-like): Testing data.
+      yTest (array-like): Testing labels.
+
+  Returns:
+      tuple: Transformed training and testing data after feature selection.
+  """
+  # Calculate the number of features to select based on the ratio provided.
+  noOfFeatures = int(noOfFeaturesRatio * xTrain.shape[1] / 100.0)
+
+  # Raise an error if the number of features exceeds the number of features in the dataset.
+  if (noOfFeatures > xTrain.shape[1]):
+    raise ValueError("Number of features must be less than or equal to the number of features in the dataset.")
+
+  # If the number of features equals the total number of features, return the original data without feature selection.
+  if (noOfFeatures == xTrain.shape[1]):
+    return xTrain, xTest
+
+  # Perform PCA for dimensionality reduction if the specified technique is "PCA".
+  if (tech == "PCA"):
+    fs = PCA(n_components=noOfFeatures)  # Initialize PCA with the specified number of components.
+    xTrain = fs.fit_transform(xTrain)  # Fit PCA on the training data and transform it.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted PCA.
+
+  # Perform feature selection using Random Forest feature importance if the specified technique is "RF".
+  elif (tech == "RF"):
+    fs = RandomForestClassifier()  # Initialize a Random Forest classifier.
+    fs.fit(xTrain, yTrain)  # Fit the Random Forest model on the training data.
+    importances = fs.feature_importances_  # Retrieve feature importances from the trained model.
+    indices = np.argsort(importances)[::-1]  # Sort feature importances in descending order.
+    # Select the top features based on the specified number of features.
+    trainCols = xTrain.columns[indices[:noOfFeatures]]  # Select the top features from the training data.
+    testCols = xTest.columns[indices[:noOfFeatures]]  # Select the top features from the testing data.
+    xTrain = xTrain[trainCols]  # Filter the training data to keep only the selected features.
+    xTest = xTest[testCols]  # Filter the testing data to keep only the selected features.
+
+  # Perform Recursive Feature Elimination (RFE) if the specified technique is "RFE".
+  elif (tech == "RFE"):
+    # Initialize RFE with a Random Forest estimator.
+    fs = RFE(RandomForestClassifier(), n_features_to_select=noOfFeatures)
+    fs.fit(xTrain, yTrain)  # Fit RFE on the training data.
+    xTrain = fs.transform(xTrain)  # Transform the training data using the fitted RFE.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted RFE.
+
+  # Perform feature selection using Chi-squared test if the specified technique is "Chi2".
+  elif (tech == "Chi2"):
+    fs = SelectKBest(chi2, k=noOfFeatures)  # Initialize SelectKBest with the Chi-squared test.
+    xTrain = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+
+  # Perform feature selection using Mutual Information if the specified technique is "MI".
+  elif (tech == "MI"):
+    fs = SelectKBest(mutual_info_classif, k=noOfFeatures)  # Initialize SelectKBest with Mutual Information.
+    xTrain = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+
+  # Perform feature selection using ANOVA if the specified technique is "ANOVA".
+  elif (tech == "ANOVA"):
+    fs = SelectKBest(f_classif, k=noOfFeatures)  # Initialize SelectKBest with ANOVA F-value.
+    xTrain = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+
+  # Perform feature selection using Linear Discriminant Analysis if the specified technique is "LDA".
+  elif (tech == "LDA"):
+    fs = LinearDiscriminantAnalysis(
+      n_components=noOfFeatures)  # Initialize LDA with the specified number of components.
+    xTrain = fs.fit_transform(xTrain, yTrain)  # Fit LDA on the training data and transform it.
+    xTest = fs.transform(xTest)  # Transform the testing data using the fitted LDA.
+
+  else:
+    raise ValueError(f"Invalid feature selection technique ({tech}) specified.")
+
+  # Return the transformed training and testing data after feature selection.
+  return xTrain, xTest, fs
+
+
 def MachineLearningClassification(
   storagePath,
   filename,
@@ -2183,6 +2420,9 @@ def MachineLearningClassification(
 
   # Read the CSV file into a pandas DataFrame.
   data = pd.read_csv(os.path.join(storagePath, filename))
+
+  # Drop empty columns from the DataFrame.
+  data = data.dropna(axis=1, how="all")
 
   # Drop rows with null or empty values from the DataFrame.
   data = data.dropna()
@@ -2261,8 +2501,147 @@ def MachineLearningClassification(
   plt.tight_layout()  # Adjust the layout to fit the plot.
 
   # Save the confusion matrix plot as a PNG file.
+  os.makedirs(os.path.join(storagePath, filename.split('.')[0]), exist_ok=True)
   plt.savefig(
-    os.path.join(storagePath, f"{filename.split('.')[0]} {scalerName} {modelName} CM.png"),
+    os.path.join(storagePath, filename.split('.')[0], f"{scalerName} {modelName} CM.png"),
+    bbox_inches="tight",
+    dpi=500,
+  )
+
+  # plt.show()  # Show the confusion matrix plot.
+  plt.close()  # Close the plot to free up memory.
+
+  # Return the calculated metrics.
+  return metrics
+
+
+def MachineLearningClassificationV2(
+  storagePath,
+  filename,
+  modelName,
+  scalerName,
+  fsTechName,
+  noOfFeaturesRatio,
+  testRatio=0.2,
+  targetColumn="Class",
+):
+  """
+  Perform machine learning classification on the given dataset.
+
+  Parameters:
+      storagePath (str): Path to the directory containing the dataset.
+      filename (str): Name of the CSV file containing the dataset.
+      modelName (str): Name of the machine learning classification model.
+      scalerName (str): Name of the scaler to use.
+      fsTechName (str): Feature selection technique to use.
+      noOfFeaturesRatio (float): Ratio of features to select.
+      testRatio (float): Ratio of the test data.
+      targetColumn (str): Name of the target column in the dataset.
+
+  Returns:
+      metrics (dict): Dictionary containing the calculated performance metrics.
+  """
+
+  # Read the CSV file into a pandas DataFrame.
+  data = pd.read_csv(os.path.join(storagePath, filename))
+
+  # Drop empty columns from the DataFrame.
+  data = data.dropna(axis=1, how="all")
+
+  # Drop rows with null or empty values from the DataFrame.
+  data = data.dropna()
+
+  # Features (X) are all columns except the "Class" column.
+  X = data.drop(targetColumn, axis=1)
+
+  # Target (y) is the "Class" column.
+  y = data[targetColumn]
+
+  # Encode the target labels into numerical values using LabelEncoder.
+  le = LabelEncoder()
+  yEnc = le.fit_transform(y)
+  labels = le.classes_
+
+  # Split the data into training and testing sets.
+  xTrain, xTest, yTrain, yTest = train_test_split(
+    X, yEnc,
+    test_size=testRatio,
+    random_state=np.random.randint(0, 1000),
+    stratify=yEnc,
+  )
+
+  if (scalerName is not None):
+    # Create a scaler object to scale the features.
+    scaler = GetScalerObject(scalerName)
+    # Fit the scaler on the training data and transform it.
+    xTrain = scaler.fit_transform(xTrain)
+    # Transform the test data using the fitted scaler.
+    xTest = scaler.transform(xTest)
+
+  # Perform feature selection based on the specified technique.
+  if (fsTechName is not None):  # Check if feature selection technique is provided.
+    xTrain, xTest, fs = PerformFeatureSelection(
+      fsTechName,  # Feature selection technique.
+      noOfFeaturesRatio,  # Ratio of features to select.
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      xTest,  # Testing data.
+      yTest,  # Testing labels.
+    )
+
+  # Train a model on the training data.
+  model = GetMLClassificationModelObject(modelName)
+  model.fit(xTrain, yTrain)
+
+  # Evaluate the model by making predictions on the test data.
+  predTest = model.predict(xTest)
+
+  # Calculate the confusion matrix using the true and predicted labels.
+  cm = confusion_matrix(yTest, predTest)
+
+  # Calculate performance metrics using the custom PerformanceMetrics function.
+  metrics = PerformanceMetrics(cm)
+
+  # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
+  # Print the calculated metrics with 4 decimal places.
+  # for key, value in metrics.items():
+  #   print(f"{key}: {np.round(value, 4)}")
+
+  # UNCOMMENT THE FOLLOWING CODE TO SAVE THE INDIVIDUAL METRICS IF REQUIRED.
+  # Save the metrics in a CSV file for future reference.
+  # df = pd.DataFrame(metrics.items(), columns=["Metric", "Value"])
+  # df.to_csv(
+  #   os.path.join(storagePath, f"{filename.split('.')[0]} {scalerName} {modelName} Metrics.csv"),
+  #   index=False
+  # )
+
+  # Display the confusion matrix using ConfusionMatrixDisplay.
+  disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=le.classes_,
+  )
+  # Create a plot for the confusion matrix.
+  fig, ax = plt.subplots(figsize=(8, 8))
+  disp.plot(
+    cmap=plt.cm.Blues,  # Set the color map.
+    values_format="d",  # Set the format of the values.
+    xticks_rotation="horizontal",  # Set the x-axis labels rotation.
+    colorbar=True,  # Show the color bar.
+    ax=ax,  # Set the axis.
+  )
+  plt.title("Confusion Matrix", fontsize=16)  # Set the title.
+  plt.xlabel("Predicted Label", fontsize=14)  # Set the axis labels.
+  plt.ylabel("True Label", fontsize=14)  # Set the axis labels.
+  plt.tight_layout()  # Adjust the layout to fit the plot.
+
+  # Save the confusion matrix plot as a PNG file.
+  os.makedirs(os.path.join(storagePath, f"{filename.split('.')[0]} (with FS)"), exist_ok=True)
+  plt.savefig(
+    os.path.join(
+      storagePath,
+      f"{filename.split('.')[0]} (with FS)",
+      f"{scalerName} {modelName} {fsTechName} {noOfFeaturesRatio} CM.png"
+    ),
     bbox_inches="tight",
     dpi=500,
   )

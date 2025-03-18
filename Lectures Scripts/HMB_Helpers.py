@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jan 29th, 2025
-# Last Modification Date: Mar 3rd, 2025
+# Last Modification Date: Mar 18th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -26,6 +26,7 @@ from sklearn.ensemble import *
 from sklearn.decomposition import *
 from sklearn.feature_selection import *
 from sklearn.discriminant_analysis import *
+from imblearn.over_sampling import *
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
@@ -2395,6 +2396,28 @@ def PerformFeatureSelection(tech, noOfFeaturesRatio, xTrain, yTrain, xTest, yTes
   return xTrain, xTest, fs
 
 
+def OversampleDataset(xTrain, yTrain, techniqueStr="SMOTE"):
+  if (techniqueStr == "SMOTE"):
+    technique = SMOTE
+  elif (techniqueStr == "ADASYN"):
+    technique = ADASYN
+  elif (techniqueStr == "BorderlineSMOTE"):
+    technique = BorderlineSMOTE
+  elif (techniqueStr == "SVMSMOTE"):
+    technique = SVMSMOTE
+  else:
+    raise ValueError(f"Invalid oversampling technique ({techniqueStr}) specified.")
+
+  params = {
+    "sampling_strategy": "minority",
+    "random_state"     : 42,
+  }
+
+  obj = technique(**params)
+  xTrain, yTrain = obj.fit_resample(xTrain, yTrain)
+  return xTrain, yTrain
+
+
 def MachineLearningClassification(
   storagePath,
   filename,
@@ -2641,6 +2664,153 @@ def MachineLearningClassificationV2(
       storagePath,
       f"{filename.split('.')[0]} (with FS)",
       f"{scalerName} {modelName} {fsTechName} {noOfFeaturesRatio} CM.png"
+    ),
+    bbox_inches="tight",
+    dpi=500,
+  )
+
+  # plt.show()  # Show the confusion matrix plot.
+  plt.close()  # Close the plot to free up memory.
+
+  # Return the calculated metrics.
+  return metrics
+
+
+def MachineLearningClassificationV3(
+  storagePath,
+  filename,
+  modelName,
+  scalerName,
+  fsTechName,
+  noOfFeaturesRatio,
+  ovTech,
+  testRatio=0.2,
+  targetColumn="Class",
+):
+  """
+  Perform machine learning classification on the given dataset.
+
+  Parameters:
+      storagePath (str): Path to the directory containing the dataset.
+      filename (str): Name of the CSV file containing the dataset.
+      modelName (str): Name of the machine learning classification model.
+      scalerName (str): Name of the scaler to use.
+      fsTechName (str): Feature selection technique to use.
+      noOfFeaturesRatio (float): Ratio of features to select.
+      testRatio (float): Ratio of the test data.
+      targetColumn (str): Name of the target column in the dataset.
+
+  Returns:
+      metrics (dict): Dictionary containing the calculated performance metrics.
+  """
+
+  # Read the CSV file into a pandas DataFrame.
+  data = pd.read_csv(os.path.join(storagePath, filename))
+
+  # Drop empty columns from the DataFrame.
+  data = data.dropna(axis=1, how="all")
+
+  # Drop rows with null or empty values from the DataFrame.
+  data = data.dropna()
+
+  # Features (X) are all columns except the "Class" column.
+  X = data.drop(targetColumn, axis=1)
+
+  # Target (y) is the "Class" column.
+  y = data[targetColumn]
+
+  # Encode the target labels into numerical values using LabelEncoder.
+  le = LabelEncoder()
+  yEnc = le.fit_transform(y)
+  labels = le.classes_
+
+  # Split the data into training and testing sets.
+  xTrain, xTest, yTrain, yTest = train_test_split(
+    X, yEnc,
+    test_size=testRatio,
+    random_state=np.random.randint(0, 1000),
+    stratify=yEnc,
+  )
+
+  if (scalerName is not None):
+    # Create a scaler object to scale the features.
+    scaler = GetScalerObject(scalerName)
+    # Fit the scaler on the training data and transform it.
+    xTrain = scaler.fit_transform(xTrain)
+    # Transform the test data using the fitted scaler.
+    xTest = scaler.transform(xTest)
+
+  # Perform feature selection based on the specified technique.
+  if (fsTechName is not None):  # Check if feature selection technique is provided.
+    xTrain, xTest, fs = PerformFeatureSelection(
+      fsTechName,  # Feature selection technique.
+      noOfFeaturesRatio,  # Ratio of features to select.
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      xTest,  # Testing data.
+      yTest,  # Testing labels.
+    )
+
+  # Perform oversampling of the training data.
+  if (ovTech is not None):  # Check if oversampling technique is provided.
+    xTrain, yTrain = OversampleDataset(
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      techniqueStr=ovTech,  # Oversampling technique.
+    )
+
+  # Train a model on the training data.
+  model = GetMLClassificationModelObject(modelName)
+  model.fit(xTrain, yTrain)
+
+  # Evaluate the model by making predictions on the test data.
+  predTest = model.predict(xTest)
+
+  # Calculate the confusion matrix using the true and predicted labels.
+  cm = confusion_matrix(yTest, predTest)
+
+  # Calculate performance metrics using the custom PerformanceMetrics function.
+  metrics = PerformanceMetrics(cm)
+
+  # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
+  # Print the calculated metrics with 4 decimal places.
+  # for key, value in metrics.items():
+  #   print(f"{key}: {np.round(value, 4)}")
+
+  # UNCOMMENT THE FOLLOWING CODE TO SAVE THE INDIVIDUAL METRICS IF REQUIRED.
+  # Save the metrics in a CSV file for future reference.
+  # df = pd.DataFrame(metrics.items(), columns=["Metric", "Value"])
+  # df.to_csv(
+  #   os.path.join(storagePath, f"{filename.split('.')[0]} {scalerName} {modelName} Metrics.csv"),
+  #   index=False
+  # )
+
+  # Display the confusion matrix using ConfusionMatrixDisplay.
+  disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=le.classes_,
+  )
+  # Create a plot for the confusion matrix.
+  fig, ax = plt.subplots(figsize=(8, 8))
+  disp.plot(
+    cmap=plt.cm.Blues,  # Set the color map.
+    values_format="d",  # Set the format of the values.
+    xticks_rotation="horizontal",  # Set the x-axis labels rotation.
+    colorbar=True,  # Show the color bar.
+    ax=ax,  # Set the axis.
+  )
+  plt.title("Confusion Matrix", fontsize=16)  # Set the title.
+  plt.xlabel("Predicted Label", fontsize=14)  # Set the axis labels.
+  plt.ylabel("True Label", fontsize=14)  # Set the axis labels.
+  plt.tight_layout()  # Adjust the layout to fit the plot.
+
+  # Save the confusion matrix plot as a PNG file.
+  os.makedirs(os.path.join(storagePath, f"{filename.split('.')[0]} (FS-IMB)"), exist_ok=True)
+  plt.savefig(
+    os.path.join(
+      storagePath,
+      f"{filename.split('.')[0]} (FS-IMB)",
+      f"{scalerName} {modelName} {fsTechName} {noOfFeaturesRatio} {ovTech} CM.png"
     ),
     bbox_inches="tight",
     dpi=500,

@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Mar 3rd, 2025
-# Last Modification Date: Mar 3rd, 2025
+# Last Modification Date: Mar 18th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -55,7 +55,7 @@ models = [
   # "Stacking",  # Stacking Classifier
 ]
 
-# Perform machine learning classification using different scalers and models.
+# Perform machine learning classification.
 history = []
 for modelName in tqdm.tqdm(models):
   for scalerName in tqdm.tqdm(scalers):
@@ -78,7 +78,9 @@ for modelName in tqdm.tqdm(models):
         }
       )
     except Exception as e:
-      print(f"Error: {e}")
+      # Uncomment the following line to print the error.
+      # print(f"\nError: {e}")
+      pass
 
 # Save the performance metrics in a CSV file for future reference.
 df = pd.DataFrame(history)

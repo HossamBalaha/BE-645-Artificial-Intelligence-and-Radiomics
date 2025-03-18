@@ -37,6 +37,8 @@ This series is your gateway to the fascinating world of applying AI techniques t
 6. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 06 Recap (AI-Generated Podcast)](https://youtu.be/ykwc6M0TJ4M)
 7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 Recap (AI-Generated Podcast)](https://youtu.be/5NLd2JnyZYc)
 8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 Recap (AI-Generated Podcast)](https://youtu.be/MnhxJRPTyV4)
+9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 Recap (AI-Generated Podcast)](https://youtu.be/1241PN_nsHk)
+10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 Recap (AI-Generated Podcast)](https://youtu.be/7dSpY0jF-hg)
 
 **Videos (Summer 2024)**:
 

@@ -1,3 +1,6 @@
 .idea
 .idea/*
-Lectures Scripts/MedMNISTv2/*.npz
+__pycache__
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo

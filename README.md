@@ -1,4 +1,4 @@
-# BE 645 Artificial Intelligence (AI) and Radiomics (Spring 2025) - Updated
+# BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2025) - Updated
 
 Welcome to the BE 645: Artificial Intelligence (AI) and Radiomics course.
 
@@ -20,101 +20,30 @@ allow AI models to assist doctors and healthcare professionals in managing and d
 
 This series is your gateway to the fascinating world of applying AI techniques to radiomics.
 
-**Full Playlists**:
+**Recent Playlist**:
 
-> Recent Playlist from Spring 2025 (AI-Generated
-> Podcasts): https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
+> Playlist from Summer 2025 (Recorded): https://www.youtube.com/playlist?list=PLVrN2LRb7eT2GOJS8YKf1TcP6X1jr-9Dn
 
-> Old Playlist from Summer 2024 (Recorded): https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
+**Earlier Playlists**:
 
-**AI-Generated Podcasts (Spring 2025)**:
+> Playlist from Spring 2025 (AI-Generated Podcasts):
+> https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
 
-1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 Recap (AI-Generated Podcast)](https://youtu.be/E1NFmke8FCs)
-2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 Recap (AI-Generated Podcast)](https://youtu.be/TiBbfKyX9AI)
-3. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 Recap (AI-Generated Podcast)](https://youtu.be/Tl-cWlO5p8E)
-4. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 04 Recap (AI-Generated Podcast)](https://youtu.be/N5vN7UihUIs)
-5. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 05 Recap (AI-Generated Podcast)](https://youtu.be/-Ke9wfCHYgs)
-6. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 06 Recap (AI-Generated Podcast)](https://youtu.be/ykwc6M0TJ4M)
-7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 Recap (AI-Generated Podcast)](https://youtu.be/5NLd2JnyZYc)
-8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 Recap (AI-Generated Podcast)](https://youtu.be/MnhxJRPTyV4)
-9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 Recap (AI-Generated Podcast)](https://youtu.be/1241PN_nsHk)
-10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 Recap (AI-Generated Podcast)](https://youtu.be/7dSpY0jF-hg)
-
-**Videos (Summer 2024)**:
-
-1. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 01 - Introduction](https://youtu.be/pefwr1HP_wA)
-2. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 02 - First Order Features](https://youtu.be/MpCFet8SEC4)
-3. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 03 - GLCM](https://youtu.be/wrvbEjg3bw8)
-4. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 04 - GLRLM](https://youtu.be/0z39SjZMuyI)
-5. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 05 - GLSZM](https://youtu.be/djnwNE1_8cI)
-6. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 06 - Machine Learning Example](https://youtu.be/0Xk4eztvMHc)
-7. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 07 - LBP](https://youtu.be/ZKJpComTCoQ)
-8. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 08 - Shape Features](https://youtu.be/OO4KKR8KkJ4)
-9. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 09 - Machine Learning 3D Example](https://youtu.be/EXaAj1syKvk)
-10. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 10 - Machine Learning 3D Example Part-2](https://youtu.be/bFPzK4QFPQQ)
-11. [BE 645: Artificial Intelligence (AI) and Radiomics - Lecture 11 - Building & Tuning ML-based System](https://youtu.be/rFFF3PhxMt4)
+> Playlist from Summer 2024 (Recorded): https://www.youtube.com/playlist?list=PLVrN2LRb7eT2KV3YMdXeF2B9dgaN4QF4g
 
 ## Programming Language and Libraries
 
-The programming language used in this series is `Python`, and the primary libraries employed are:
+The programming language used in this series is `Python`, and the utilized packages/libraries are stored in
+the `requirements.txt` file in the root directory of this repository.
 
-1. `OpenCV` - An open-source computer vision and machine learning software library.
-2. `NumPy` - A fundamental package for scientific computing with Python.
-3. `Matplotlib` - A comprehensive library for creating static, animated, and interactive visualizations in Python.
-4. `Scikit-learn` - A simple and efficient tool for data mining and data analysis built on NumPy, SciPy, and Matplotlib.
-5. `Split Folders` - A simple library to split folders into training, validation, and testing directories.
-6. `NiBabel` - A library to read and write common neuroimaging file formats.
-7. `Pandas` - A fast, powerful, flexible, and easy-to-use open-source data analysis and data manipulation library.
-8. `TQDM` - A fast, extensible progress bar for loops and CLI.
-10. `Trimesh` - A pure library for loading and using triangular meshes with an emphasis on watertight meshes.
-11. `pyglet` - A cross-platform windowing and multimedia library for Python.
-12. `Scikit-image` - A collection of algorithms for image processing.
-13. `Imbalanced-learn` - A Python library to tackle the problem of imbalanced datasets.
-14. `XGBoost` - An optimized distributed gradient boosting library designed to be highly efficient, flexible, and
-    portable.
-15. `Optuna` - An automatic hyperparameter optimization software framework that is suitable for machine learning tasks.
+To install the required libraries, you can use the following command:
 
-The packages versions of the libraries used in this series are:
-
-```text
-cv2==4.9.0
-numpy==1.26.4
-matplotlib==3.8.3
-scikit-learn==1.4.1.post1
-splitfolders==0.5.1
-nibabel==5.2.1
-pandas==2.2.1
-tqdm==4.66.2
-trimesh==4.4.1
-pyglet==1.5.29
-scikit-image==0.22.0
-imbalanced-learn=0.12.3
-xgboost=2.1.0
-optuna=3.6.1
-```
-
-To install the required libraries, you can use the following PIP commands:
-
-```
-pip install opencv-python==4.9.*
-pip install opencv-contrib-python==4.9.*
-pip install numpy==1.26.4
-pip install matplotlib==3.8.3
-pip install scikit-learn==1.4.1.post1
-pip install split-folders==0.5.1
-pip install nibabel==5.2.1
-pip install pandas==2.2.1
-pip install tqdm==4.66.2
-pip install trimesh==4.4.1
-pip install pyglet==1.5.29
-pip install scikit-image==0.22.0
-pip install imbalanced-learn==0.12.3
-pip install xgboost==2.1.0
-pip install optuna==3.6.1
+```bash
+pip install -r requirements.txt
 ```
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work
-with the latest versions. Please note that the code has been tested on `Python 3.9.17` and the specified library
+with the latest versions. Please note that the code has been tested on `Python 3.10.16` and the specified library
 versions on a `Windows 11` machine. It has not been tested on other operating systems or other versions of Python and
 the libraries._
 

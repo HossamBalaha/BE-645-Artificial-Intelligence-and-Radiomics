@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 20th, 2024
-# Last Modification Date: Jan 14th, 2025
+# Last Modification Date: May 21st, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -31,7 +31,11 @@ print("Image Shape: ", caseImgShape)  # Print the shape of the liver image.
 print("Segmentation Shape: ", caseSegShape)  # Print the shape of the segmentation mask.
 
 # Extract the Region of Interest (ROI) using the segmentation mask.
-roi = cv2.bitwise_and(caseImg, caseSeg)  # Apply bitwise AND operation to extract the ROI.
+# Apply bitwise AND operation to extract the ROI.
+roi = cv2.bitwise_and(
+  caseImg,  # Image.
+  caseSeg,  # Segmentation mask.
+)
 
 # Save the extracted ROI to a new image file.
 cv2.imwrite(
@@ -85,4 +89,5 @@ plt.savefig(
   bbox_inches="tight",  # Set the bounding box to include the entire figure.
 )  # Save the figure as an image.
 plt.show()  # Display the figure.
-plt.close()  # Close the figure to free up memory.
+plt.close()  # Close the figure.
+plt.clf()  # Clear the current figure.

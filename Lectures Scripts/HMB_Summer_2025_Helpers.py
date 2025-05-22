@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: May 21st, 2025
+# Last Modification Date: May 22nd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -23,9 +23,11 @@ def FirstOrderFeatures2D(img, mask, isNorm=True, ignoreZeros=True):
       img (numpy.ndarray): The input image as a 2D NumPy array.
       mask (numpy.ndarray): The binary mask as a 2D NumPy array.
       isNorm (bool): Flag to indicate whether to normalize the histogram.
+      ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
 
   Returns:
       results (dict): A dictionary containing the calculated first-order features.
+      hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
   """
   # Extract the Region of Interest (ROI) using the mask.
   roi = cv2.bitwise_and(img, mask)  # Apply bitwise AND operation to extract the ROI.
@@ -45,7 +47,7 @@ def FirstOrderFeatures2D(img, mask, isNorm=True, ignoreZeros=True):
   hist2D = np.array(hist2D)  # Convert the histogram list to a NumPy array.
 
   # If ignoreZeros is True, set the first bin (background) to zero.
-  if (ignoreZeros):
+  if (ignoreZeros and (minVal == 0)):
     # Ignore the background (assumed to be the first bin in the histogram).
     hist2D = hist2D[1:]  # Remove the first bin (background).
     minVal += 1  # Adjust the minimum value to exclude the background.

@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 20th, 2024
-# Last Modification Date: May 21st, 2025
+# Last Modification Date: May 22nd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -84,7 +84,7 @@ print("Excess Kurtosis: ", np.round(exKurtosis, 4))  # Print the excess kurtosis
 
 # Plot the histogram.
 plt.figure()  # Create a new figure for the plot.
-plt.bar(np.arange(min, max + 1), hist2D)  # Plot the histogram as a bar chart.
+plt.bar(rng, hist2D)  # Plot the histogram as a bar chart.
 plt.title("2D Histogram")  # Set the title of the plot.
 plt.xlabel("Pixel Value")  # Label the x-axis.
 plt.ylabel("Frequency")  # Label the y-axis.

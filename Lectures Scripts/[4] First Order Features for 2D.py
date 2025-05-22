@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 20th, 2024
-# Last Modification Date: May 21st, 2025
+# Last Modification Date: May 22nd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -26,9 +26,10 @@ caseSeg = cv2.imread(caseSegPath, cv2.IMREAD_GRAYSCALE)  # Load the segmentation
 
 # Calculate first-order features for 2D images.
 # With normalization and ignoring zeros (background).
-# fos, hist2D = FirstOrderFeatures2D(caseImg, caseSeg, isNorm=True, ignoreZeros=True)
+fos, hist2D = FirstOrderFeatures2D(caseImg, caseSeg, isNorm=True, ignoreZeros=True)
 # With normalization and without ignoring zeros (background).
-fos, hist2D = FirstOrderFeatures2D(caseImg, caseSeg, isNorm=True, ignoreZeros=False)
+# fos, hist2D = FirstOrderFeatures2D(caseImg, caseSeg, isNorm=True, ignoreZeros=False)
+
 print("First Order Features:")  # Print the header for the features.
 for key, value in fos.items():  # Iterate through the features' dictionary.
   print(f"{key}: {np.round(value, 4)}")  # Print each feature with its value formatted to 4 decimal places.

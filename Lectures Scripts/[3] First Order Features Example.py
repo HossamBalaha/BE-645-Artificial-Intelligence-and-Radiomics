@@ -94,6 +94,7 @@ plt.savefig(
   dpi=300,  # Set the resolution of the plot.
   bbox_inches="tight",  # Save the plot as an image file.
 )  # Save the plot as an image file.
-plt.show()  # Display the plot.
+
+plt.show()  # Display the histogram plot.
 plt.close()  # Close the figure.
 plt.clf()  # Clear the current figure.

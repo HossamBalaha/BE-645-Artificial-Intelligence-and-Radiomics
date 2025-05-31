@@ -32,6 +32,15 @@ X = np.array([
 #   [5, 5, 5, 1, 5],
 # ]).astype(np.uint8)  # Convert the array to unsigned 8-bit integers.
 
+# Another example 2D array (matrix) of pixel values.
+# X = np.array([
+#   [1, 2, 5, 6, 4],
+#   [3, 2, 5, 6, 1],
+#   [4, 5, 3, 2, 1],
+#   [6, 4, 1, 2, 3],
+#   [1, 4, 5, 2, 3],
+# ]).astype(np.uint8)  # Convert the array to unsigned 8-bit integers.
+
 # Calculate the histogram of the 2D array.
 min = int(np.min(X))  # Find the minimum value in the array.
 max = int(np.max(X))  # Find the maximum value in the array.

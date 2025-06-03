@@ -66,23 +66,6 @@ Citation for the dataset:
 > Bilic, P., Christ, P., Li, H. B., Vorontsov, E., Ben-Cohen, A., Kaissis, G., ... & Menze, B. (2023). The liver tumor
 > segmentation benchmark (lits). Medical Image Analysis, 84, 102680.
 
-***Breast Ultrasound Images Dataset***
-
-The dataset comprises 780 breast ultrasound images collected in 2018 from 600 female patients aged 25 to 75 years.
-Each image has an average size of 500 x 500 pixels and is stored in PNG format, accompanied by ground truth images for
-reference.
-The dataset is structured into three categories: normal, benign, and malignant.
-
-Dataset Link: https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-images-dataset
-
-More information: Original paper (Dataset of breast ultrasound images) that can be accessed from this
-link: https://doi.org/10.1016/j.dib.2019.104863
-
-Citation for the dataset:
-
-> Al-Dhabyani, W., Gomaa, M., Khaled, H., & Fahmy, A. (2020). Dataset of breast ultrasound images.
-> Data in brief, 28, 104863.
-
 ***Brain Tumor Dataset***
 
 This dataset contains 3,064 T1-weighted contrast-enhanced MRI images from 233 patients, categorized into three
@@ -106,11 +89,40 @@ Citations for the dataset:
 > Cheng, J., Yang, W., Huang, M., Huang, W., Jiang, J., Zhou, Y., ... & Chen, W. (2016). Retrieval of brain tumors by
 > adaptive spatial pooling and fisher vector representation. PloS one, 11(6), e0157112.
 
+***Brain Tumor Dataset: Segmentation & Classification***
+
+This dataset is a curated and enhanced collection of brain tumor MRI
+images derived from two publicly available datasets: the Kaggle Brain Tumor MRI Dataset and the SciDB Brain Tumor
+Dataset. It is designed for both segmentation and classification tasks, including identifying tumor types such
+as glioma, meningioma, and pituitary tumors, with approximately 5,000 images and ~2,700 segmentation masks. Enhancements
+include normalization, noise reduction through Gaussian filtering, contrast adjustments, and structured organization
+into directories for images and masks, along with pixel-level annotations and classification labels.
+
+Dataset Link: https://www.kaggle.com/datasets/indk214/brain-tumor-dataset-segmentation-and-classification
+
+***Breast Ultrasound Images Dataset***
+
+The dataset comprises 780 breast ultrasound images collected in 2018 from 600 female patients aged 25 to 75 years.
+Each image has an average size of 500 x 500 pixels and is stored in PNG format, accompanied by ground truth images for
+reference.
+The dataset is structured into three categories: normal, benign, and malignant.
+
+Dataset Link: https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-images-dataset
+
+More information: Original paper (Dataset of breast ultrasound images) that can be accessed from this
+link: https://doi.org/10.1016/j.dib.2019.104863
+
+Citation for the dataset:
+
+> Al-Dhabyani, W., Gomaa, M., Khaled, H., & Fahmy, A. (2020). Dataset of breast ultrasound images.
+> Data in brief, 28, 104863.
+
 ***COVID-19 Radiography Database***
 
 A team of researchers from Qatar University, Doha, the University of Dhaka, and their collaborators from Pakistan and
 Malaysia, in collaboration with medical doctors, developed a comprehensive COVID-19 Radiography Database, which won the
 COVID-19 Dataset Award by the Kaggle Community.
+
 Initially, they released a dataset containing 219 COVID-19, 1341 normal, and 1,345 viral pneumonia chest X-ray images.
 Subsequent updates expanded the dataset significantly, with the latest update including 3,616 COVID-19 cases,
 10,192 normal, 6,012 lung opacity, and 1,345 viral pneumonia images, along with corresponding lung masks.
@@ -122,7 +134,7 @@ with 2,913 COVID-19 infection segmentation masks provided from their previous Qa
 
 Dataset Link: https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database
 
-Citation for the database:
+Citation for the dataset:
 
 > Chowdhury, M. E., Rahman, T., Khandakar, A., Mazhar, R., Kadir, M. A., Mahbub, Z. B., ... & Islam, M. T. (2020). Can
 > AI help in screening viral and COVID-19 pneumonia?. Ieee Access, 8, 132665-132676.
@@ -164,8 +176,7 @@ the `Lectures Scripts` folder.
 No part of this series may be reproduced, distributed, or transmitted in any form or by any means, including
 photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the author,
 except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by
-copyright law.
-For permission requests, contact the author.
+copyright law. For permission requests, contact the author.
 
 The code provided in this series is for educational purposes only and should be used with caution.
 The author is not responsible for any misuse of the code provided.

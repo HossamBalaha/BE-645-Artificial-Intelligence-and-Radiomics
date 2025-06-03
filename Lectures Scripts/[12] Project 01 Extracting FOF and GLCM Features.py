@@ -32,6 +32,7 @@ ignoreZeros = True  # Whether to ignore zero-valued pixels.
 targetSize = (128, 128)  # Target size for resizing images.
 doPlotting = True  # Whether to plot the histograms and GLCM visualizations.
 
+# Check if plotting is enabled.
 if (doPlotting):
   # Define the path for storing visualizations.
   visualStoragePath = r"Data/Brain Tumor Dataset Segmentation & Classification Visualizations"
@@ -44,6 +45,7 @@ theta = np.radians(theta)
 # List all classes in the dataset directory.
 classes = os.listdir(datasetPath)
 
+# Create a list to store the features extracted from each image.
 history = []
 
 # Iterate through each class to process images.
@@ -54,7 +56,7 @@ for cls in tqdm.tqdm(classes, desc="Processing classes."):
   # List all files in the class directory.
   files = os.listdir(clsPath)
 
-  # Filter out files that are image (not masks).
+  # Filter out files that are images (not masks).
   files = [f for f in files if "_mask" not in f]
 
   # Iterate through each file in the class directory.
@@ -68,7 +70,6 @@ for cls in tqdm.tqdm(classes, desc="Processing classes."):
     # Read the image and mask.
     image = cv2.imread(filePath, cv2.IMREAD_GRAYSCALE)
     mask = cv2.imread(maskPath, cv2.IMREAD_GRAYSCALE)
-
 
     # Check if the image and mask are read correctly.
     if (image is None or mask is None):

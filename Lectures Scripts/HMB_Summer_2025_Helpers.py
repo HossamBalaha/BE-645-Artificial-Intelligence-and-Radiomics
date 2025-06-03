@@ -258,3 +258,121 @@ def CalculateGLCMFeaturesOptimized(coMatrix):
     "StdDevX"      : stdDevX,  # Standard deviation of rows.
     "StdDevY"      : stdDevY,  # Standard deviation of columns.
   }
+
+
+def PreprocessBrainTumorDatasetFigshare1512427(
+  datasetPath,  # Path to the .mat file containing the image data.
+  storagePath,  # Path to save the converted image.
+  isResize=False,  # Flag to indicate whether to resize the image.
+  newSize=(256, 256),  # New size for resizing the image if isResize is True.
+  separateFolders=False,  # Flag to indicate whether to save images and masks in separate folders.
+):
+  """
+  Preprocess the Brain Tumor Dataset from Figshare 1512427.
+  Link: https://figshare.com/articles/dataset/brain_tumor_dataset/1512427
+
+  Args:
+      datasetPath (str): Path to the .mat files containing the images data.
+      storagePath (str): Path to save the converted image.
+      isResize (bool): Flag to indicate whether to resize the image.
+      newSize (tuple): New size for resizing the image if isResize is True.
+      separateFolders (bool): Flag to indicate whether to save images and masks in separate folders.
+
+  Returns:
+      None
+  """
+  # Install using pip install hdf5storage.
+  import hdf5storage, os, tqdm  # Import necessary libraries.
+
+  # Check if the datasetPath folder exists.
+  if (not os.path.exists(datasetPath)):
+    raise FileNotFoundError(f"The dataset path '{datasetPath}' does not exist.")
+
+  # List all files in the dataset path.
+  files = os.listdir(datasetPath)
+
+  # Filter the files to include only .mat files.
+  files = [file for file in files if file.endswith(".mat")]  # Keep only .mat files.
+
+  # Key to access the image data in the loaded dictionary.
+  key = "cjdata"
+
+  # Create the storage path if it does not exist.
+  os.makedirs(storagePath, exist_ok=True)  # Create the directory if it does not exist.
+
+  # Loop through each file in the dataset.
+  for file in tqdm.tqdm(files):
+    # Construct the full path to the .mat file.
+    filePath = os.path.join(datasetPath, file)
+
+    # Load the image data from the .mat file.
+    data = hdf5storage.loadmat(filePath)  # Load the .mat file.
+
+    # Extract the data using the specified key.
+    matData = data[key][0]
+
+    # Extract the label (tumor type) from the data.
+    label = str(int(matData[0][0].squeeze()))
+
+    # Extract the image data from the loaded dictionary.
+    imgData = matData[2]  # The image data is the third element in the array.
+
+    # Extract the mask from the loaded dictionary.
+    maskData = matData[4]  # The mask is the fifth element in the array.
+
+    # Convert the image data to a NumPy array.
+    imgData = np.array(imgData, dtype=np.float32)  # Convert to float32 for processing.
+    # Convert the mask data to a NumPy array.
+    maskData = np.array(maskData, dtype=np.float32)  # Convert to float32 for processing.
+
+    # Find the min and max pixel values in the image.
+    minImg, maxImg = np.min(imgData), np.max(imgData)
+    # Normalize the image data to the range [0, 255].
+    imgData = (imgData - minImg) / (maxImg - minImg) * 255.0  # Normalize to [0, 255].
+    imgData = imgData.astype(np.uint8)  # Convert to uint8 for image representation.
+
+    # Find the min and max pixel values in the mask.
+    minMask, maxMask = np.min(maskData), np.max(maskData)
+    # Normalize the mask data to the range [0, 255].
+    maskData = (maskData - minMask) / (maxMask - minMask) * 255.0  # Normalize to [0, 255].
+    maskData = cv2.threshold(maskData, 0, 255, cv2.THRESH_BINARY)[1]  # Convert to binary mask.
+    maskData = maskData.astype(np.uint8)  # Convert to uint8 for binary mask representation.
+
+    # If isResize is True, resize the image and mask to the new size.
+    if (isResize):
+      imgData = cv2.resize(imgData, newSize, interpolation=cv2.INTER_CUBIC)  # Resize the image.
+      maskData = cv2.resize(maskData, newSize, interpolation=cv2.INTER_CUBIC)  # Resize the mask.
+
+    # Get the base name of the file.
+    fileName = os.path.basename(file)
+    # Get the file name without extension.
+    fileNameNoExt = os.path.splitext(fileName)[0]
+
+    if (separateFolders):
+      # Construct the full path for the image directory.
+      imagesFolder = os.path.join(storagePath, "images", label)  # Create a directory for images.
+      # Create the image directory if it does not exist.
+      os.makedirs(imagesFolder, exist_ok=True)  # Create the directory for images.
+
+      # Construct the full path for the mask directory.
+      masksFolder = os.path.join(storagePath, "masks", label)  # Create a directory for masks.
+      # Create the mask directory if it does not exist.
+      os.makedirs(masksFolder, exist_ok=True)  # Create the directory for masks.
+
+      # Construct the full path for the image and mask files.
+      imagePath = os.path.join(imagesFolder, f"{fileNameNoExt}.png")  # Save the image as PNG.
+      maskPath = os.path.join(masksFolder, f"{fileNameNoExt}.png")  # Save the mask as PNG.
+
+    else:
+      # Construct the full path for the label directory.
+      labelPath = os.path.join(storagePath, label)  # Create a directory for the label.
+      # Create the label directory if it does not exist.
+      os.makedirs(labelPath, exist_ok=True)  # Create the directory for the label.
+
+      # Construct the full path for the image and mask files.
+      imagePath = os.path.join(labelPath, f"{fileNameNoExt}.png")  # Save the image as PNG.
+      maskPath = os.path.join(labelPath, f"{fileNameNoExt}_mask.png")  # Save the mask as PNG.
+
+    # Save the image and mask to the specified paths.
+    cv2.imwrite(imagePath, imgData)  # Save the image.
+    cv2.imwrite(maskPath, maskData)  # Save the mask.

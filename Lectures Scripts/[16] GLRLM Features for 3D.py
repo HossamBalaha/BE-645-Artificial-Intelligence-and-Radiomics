@@ -49,4 +49,4 @@ features = CalculateGLRLMFeatures(rlMatrix, volumeCropped)
 print(f"At angle {theta} degrees:")
 for feature, value in features.items():
   # Print feature name with value rounded to 4 decimal places.
-  print(f"{feature} : {np.round(value, 4)}")
+  print(f"{feature}: {np.round(value, 4)}")

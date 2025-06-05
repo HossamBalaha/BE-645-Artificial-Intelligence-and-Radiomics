@@ -60,4 +60,4 @@ print(f"At angle {theta} degrees:")
 # Iterate through computed features and print formatted values.
 for key in features:
   # Print feature name with value rounded to 4 decimal places.
-  print(key, ":", np.round(features[key], 4))
+  print(f"{key}:", np.round(features[key], 4))

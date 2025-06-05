@@ -77,6 +77,8 @@ for i in range(A.shape[0]):  # Loop through rows.
       (j + d * dx < A.shape[1])  # Ensure the column index is within bounds.
     ):
       # If the next pixel has the same gray level value.
+      # i = 0, d = 1, dy = 1 => i + d * dy = 0 + 1 * 1 = 1
+      # i = 0, d = 2, dy = 1 => i + d * dy = 0 + 2 * 1 = 2
       if (A[i + d * dy, j + d * dx] == currentPixel):
         seenMatrix[int(i + d * dy), int(j + d * dx)] = 1  # Mark it as seen.
         d += 1  # Increment the run length.

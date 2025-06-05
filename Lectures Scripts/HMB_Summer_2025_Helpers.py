@@ -568,7 +568,7 @@ def CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=True, ignoreZeros=True
     for j in range(volume.shape[1]):  # Y-dimension
       for k in range(volume.shape[2]):  # X-dimension
         # Skip previously processed voxels.
-        if seenMatrix[i, j, k] == 1:
+        if (seenMatrix[i, j, k] == 1):
           continue
 
         # Mark current voxel as processed.
@@ -585,76 +585,24 @@ def CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=True, ignoreZeros=True
           (k + runLength * dx >= 0) and
           (k + runLength * dx < volume.shape[2])
         ):
-          if volume[i + runLength * dz, j + runLength * dy, k + runLength * dx] == currentVal:
+          if (volume[i + runLength * dz, j + runLength * dy, k + runLength * dx] == currentVal):
             seenMatrix[i + runLength * dz, j + runLength * dy, k + runLength * dx] = 1
             runLength += 1
           else:
             break
 
         # Skip zero-value runs if configured.
-        if ignoreZeros and currentVal == 0:
+        if (ignoreZeros and currentVal == 0):
           continue
 
         # Update GLRLM with current run information.
         rlMatrix[currentVal - minA, runLength - 1] += 1
 
   # Normalize matrix to probability distribution if requested.
-  if isNorm:
+  if (isNorm):
     rlMatrix = rlMatrix / (np.sum(rlMatrix) + 1e-6)
 
   return rlMatrix
-
-
-def CalculateGLRLMFeatures3D(rlMatrix, volume):
-  """
-  Compute texture features from 3D Gray-Level Run-Length Matrix.
-
-  Parameters:
-      rlMatrix (numpy.ndarray): Precomputed GLRLM matrix
-      volume (numpy.ndarray): Original 3D volume for reference parameters
-
-  Returns:
-      dict: Dictionary containing seven standardized texture features
-  """
-  # Calculate intensity range parameters.
-  minA = np.min(volume)
-  maxA = np.max(volume)
-  N = maxA - minA + 1
-  R = np.max(volume.shape)
-
-  # Compute total number of runs for normalization.
-  rlN = np.sum(rlMatrix)
-
-  # Calculate Short Run Emphasis (SRE) with inverse squared weighting.
-  sre = np.sum(rlMatrix / (np.arange(1, R + 1) ** 2)).sum() / rlN
-
-  # Calculate Long Run Emphasis (LRE) with squared run length weighting.
-  lre = np.sum(rlMatrix * (np.arange(1, R + 1) ** 2)).sum() / rlN
-
-  # Calculate Gray Level Non-Uniformity (GLN) using row sums.
-  gln = np.sum(np.sum(rlMatrix, axis=1) ** 2) / rlN
-
-  # Calculate Run Length Non-Uniformity (RLN) using column sums.
-  rln = np.sum(np.sum(rlMatrix, axis=0) ** 2) / rlN
-
-  # Calculate Run Percentage relative to total voxels.
-  rp = rlN / np.prod(volume.shape)
-
-  # Calculate Low Gray Level Emphasis (LGRE) with inverse intensity weighting.
-  lgre = np.sum(rlMatrix / (np.arange(1, N + 1)[:, None] ** 2)).sum() / rlN
-
-  # Calculate High Gray Level Emphasis (HGRE) with intensity squared weighting.
-  hgre = np.sum(rlMatrix * (np.arange(1, N + 1)[:, None] ** 2)).sum() / rlN
-
-  return {
-    "Short Run Emphasis"          : sre,
-    "Long Run Emphasis"           : lre,
-    "Gray Level Non-Uniformity"   : gln,
-    "Run Length Non-Uniformity"   : rln,
-    "Run Percentage"              : rp,
-    "Low Gray Level Run Emphasis" : lgre,
-    "High Gray Level Run Emphasis": hgre,
-  }
 
 
 # ===========================================================================================

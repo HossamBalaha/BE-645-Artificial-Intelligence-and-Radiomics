@@ -43,7 +43,7 @@ rlMatrix = CalculateGLRLM3DRunLengthMatrix(
 )
 
 # Extract texture features from computed GLRLM.
-features = CalculateGLRLMFeatures3D(rlMatrix, volumeCropped)
+features = CalculateGLRLMFeatures(rlMatrix, volumeCropped)
 
 # Display computed features with formatted output.
 print(f"At angle {theta} degrees:")

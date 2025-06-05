@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 29th, 2024
-# Last Modification Date: May 30th, 2025
+# Last Modification Date: Jun 5th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -16,7 +16,7 @@ import numpy as np
 # Define parameters for the GLCM calculation.
 d = 1  # Distance between pixel pairs.
 theta = 0  # Angle (in degrees) for the direction of pixel pairs.
-isSymmetric = False  # Whether to make the GLCM symmetric.
+isSymmetric = True  # Whether to make the GLCM symmetric.
 
 # Define the input matrix (image).
 A = [
@@ -143,14 +143,14 @@ for i in range(N):  # Loop through rows.
     dissimilarity += np.abs(i - j) * coMatrix[i, j]  # Weighted sum of absolute differences.
 
 # Print the results.
-print("Energy: ", np.round(energy, 4))  # Print the energy of the GLCM.
-print("Contrast: ", np.round(contrast, 4))  # Print the contrast of the GLCM.
-print("Homogeneity: ", np.round(homogeneity, 4))  # Print the homogeneity of the GLCM.
-print("Entropy: ", np.round(entropy, 4))  # Print the entropy of the GLCM.
-print("Dissimilarity: ", np.round(dissimilarity, 4))  # Print the dissimilarity of the GLCM.
-print("Total Sum: ", np.round(totalSum, 4))  # Print the total sum of the GLCM.
-print("Mean X: ", np.round(meanX, 4))  # Print the mean of rows.
-print("Mean Y: ", np.round(meanY, 4))  # Print the mean of columns.
-print("Standard Deviation X: ", np.round(stdDevX, 4))  # Print the standard deviation of rows.
-print("Standard Deviation Y: ", np.round(stdDevY, 4))  # Print the standard deviation of columns.
-print("Correlation: ", np.round(correlation, 4))  # Print the correlation of the GLCM.
+print("Energy:", np.round(energy, 4))  # Print the energy of the GLCM.
+print("Contrast:", np.round(contrast, 4))  # Print the contrast of the GLCM.
+print("Homogeneity:", np.round(homogeneity, 4))  # Print the homogeneity of the GLCM.
+print("Entropy:", np.round(entropy, 4))  # Print the entropy of the GLCM.
+print("Dissimilarity:", np.round(dissimilarity, 4))  # Print the dissimilarity of the GLCM.
+print("Total Sum:", np.round(totalSum, 4))  # Print the total sum of the GLCM.
+print("Mean X:", np.round(meanX, 4))  # Print the mean of rows.
+print("Mean Y:", np.round(meanY, 4))  # Print the mean of columns.
+print("Standard Deviation X:", np.round(stdDevX, 4))  # Print the standard deviation of rows.
+print("Standard Deviation Y:", np.round(stdDevY, 4))  # Print the standard deviation of columns.
+print("Correlation:", np.round(correlation, 4))  # Print the correlation of the GLCM.

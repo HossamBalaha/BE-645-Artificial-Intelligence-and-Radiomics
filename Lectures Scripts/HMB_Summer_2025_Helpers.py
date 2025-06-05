@@ -258,6 +258,89 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
   return coMatrix  # Return the calculated GLCM.
 
 
+def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True):
+  """
+  Calculate the 3D Gray-Level Co-occurrence Matrix (GLCM) for a given volume.
+
+  Args:
+      volume (numpy.ndarray): The 3D volume as a NumPy array.
+      d (int): The distance between voxel pairs.
+      theta (float): The angle (in radians) for the direction of voxel pairs.
+      isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
+      isNorm (bool): Whether to normalize the GLCM. Default is True.
+      ignoreZeros (bool): Whether to ignore zero-valued voxels. Default is True.
+
+  Returns:
+      coMatrix (numpy.ndarray): The calculated GLCM.
+  """
+
+  # Determine the number of unique intensity levels in the volume.
+  minA = np.min(volume)  # Minimum intensity value.
+  maxA = np.max(volume)  # Maximum intensity value.
+  N = maxA - minA + 1  # Number of unique intensity levels.
+
+  noOfSlices = volume.shape[0]  # Number of slices in the volume.
+
+  # Initialize the co-occurrence matrix with zeros.
+  coMatrix = np.zeros((N, N))
+
+  if (d < 1):
+    raise ValueError("The distance between voxel pairs should be greater than or equal to 1.")
+  elif (d >= noOfSlices):
+    raise ValueError("The distance between voxel pairs should be less than the number of slices.")
+  elif (d >= N):
+    raise ValueError("The distance between voxel pairs should be less than the number of unique intensity levels.")
+
+  # Iterate over each voxel in the volume to calculate the GLCM.
+  for xLoc in range(volume.shape[2]):  # Loop through columns.
+    for yLoc in range(volume.shape[1]):  # Loop through rows.
+      for zLoc in range(volume.shape[0]):  # Loop through slices.
+        startLoc = (zLoc, yLoc, xLoc)  # Current voxel location (slice, row, column).
+
+        # Calculate the target voxel location based on distance and angle.
+        xTarget = xLoc + np.round(d * np.cos(theta) * np.sin(theta))  # Target column.
+        yTarget = yLoc - np.round(d * np.sin(theta) * np.sin(theta))  # Target row.
+        zTarget = zLoc + np.round(d * np.cos(theta))  # Target slice.
+        endLoc = (int(zTarget), int(yTarget), int(xTarget))  # Target voxel location.
+
+        # Check if the target location is within the bounds of the volume.
+        if (
+          (endLoc[0] < 0)  # Target slice is below the bottom slice.
+          or (endLoc[0] >= volume.shape[0])  # Target slice is above the top slice.
+          or (endLoc[1] < 0)  # Target row is above the top edge.
+          or (endLoc[1] >= volume.shape[1])  # Target row is below the bottom edge.
+          or (endLoc[2] < 0)  # Target column is to the left of the left edge.
+          or (endLoc[2] >= volume.shape[2])  # Target column is to the right of the right edge.
+        ):
+          continue  # Skip this pair if the target is out of bounds.
+
+        if (ignoreZeros):
+          # Skip the calculation if the pixel values are zero.
+          if ((volume[startLoc] == 0) or (volume[endLoc] == 0)):
+            continue
+
+        # (- minA) is added to work with matrices that does not start from 0.
+        # Increment the count for the pair (start, end).
+        # volume[startLoc] and volume[endLoc] are the intensity values at the start and end locations.
+        startPixel = volume[startLoc] - minA  # Adjust start pixel value.
+        endPixel = volume[endLoc] - minA  # Adjust end pixel value.
+
+        # Increment the co-occurrence matrix at the corresponding location.
+        coMatrix[endPixel, startPixel] += 1
+
+  # If symmetric, add the transpose of the co-occurrence matrix to itself.
+  if (isSymmetric):
+    coMatrix += coMatrix.T  # Make the GLCM symmetric.
+
+  # Normalize the co-occurrence matrix if requested.
+  if (isNorm):
+    # Divide each element by the sum of all elements.
+    # 1e-6 is added to avoid division by zero.
+    coMatrix = coMatrix / (np.sum(coMatrix) + 1e-6)
+
+  return coMatrix  # Return the calculated GLCM.
+
+
 def CalculateGLCMFeaturesOptimized(coMatrix):
   """
   Calculate texture features from a Gray-Level Co-occurrence Matrix (GLCM).
@@ -535,7 +618,7 @@ def CalculateGLRLMFeatures(rlMatrix, image):
   }
 
 
-def CalculateGLRLM3DRunLengthMatrix(volume, theta, isNorm=True, ignoreZeros=True):
+def CalculateGLRLMRunLengthMatrix3D(volume, theta, isNorm=True, ignoreZeros=True):
   """
   Calculate 3D Gray-Level Run-Length Matrix (GLRLM) for volumetric texture analysis.
 

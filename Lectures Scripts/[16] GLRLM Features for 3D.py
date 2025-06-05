@@ -37,7 +37,7 @@ theta = np.radians(theta)
 volumeCropped = ReadVolume(caseImgPaths, caseSegPaths)
 
 # Compute GLRLM with normalized probabilities and zero exclusion.
-rlMatrix = CalculateGLRLM3DRunLengthMatrix(
+rlMatrix = CalculateGLRLMRunLengthMatrix3D(
   volumeCropped, theta,
   isNorm=True, ignoreZeros=True
 )

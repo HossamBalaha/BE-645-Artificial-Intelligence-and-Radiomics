@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 20th, 2024
-# Last Modification Date: May 21st, 2025
+# Last Modification Date: Jun 5th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -63,7 +63,7 @@ df.to_csv(
 
 # Print the results.
 print("First Order Features:")  # Print the header for the features.
-print("No. of Images: ", len(summary))  # Print the number of processed images.
+print("No. of Images:", len(summary))  # Print the number of processed images.
 # Calculate the mean of each feature across all images.
 for key in summary[0].keys():
   # Skip the "Image" key.
@@ -72,4 +72,4 @@ for key in summary[0].keys():
   # Extract the values of the current feature from the summary list.
   values = [summary[i][key] for i in range(len(summary))]
   # Print the mean value of the current feature.
-  print(key + ": ", np.round(np.mean(values), 4))
+  print(key + ":", np.round(np.mean(values), 4))

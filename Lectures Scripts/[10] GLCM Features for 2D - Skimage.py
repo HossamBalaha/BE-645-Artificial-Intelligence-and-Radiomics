@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 29th, 2024
-# Last Modification Date: May 30th, 2025
+# Last Modification Date: Jun 5th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -65,11 +65,11 @@ homogeneity = graycoprops(coMatrix[1:, 1:, :, :], "homogeneity")[0, 0]  # Homoge
 ASM = graycoprops(coMatrix[1:, 1:, :, :], "ASM")[0, 0]  # Angular Second Moment (ASM) feature.
 
 # Print the GLCM features.
-print("Contrast: ", np.round(contrast, 4))  # Print the contrast feature.
-print("Correlation: ", np.round(correlation, 4))  # Print the correlation feature.
-print("Energy: ", np.round(energy, 4))  # Print the energy feature.
-print("Homogeneity: ", np.round(homogeneity, 4))  # Print the homogeneity feature.
-print("ASM: ", np.round(ASM, 4))  # Print the ASM feature.
+print("Contrast:", np.round(contrast, 4))  # Print the contrast feature.
+print("Correlation:", np.round(correlation, 4))  # Print the correlation feature.
+print("Energy:", np.round(energy, 4))  # Print the energy feature.
+print("Homogeneity:", np.round(homogeneity, 4))  # Print the homogeneity feature.
+print("ASM:", np.round(ASM, 4))  # Print the ASM feature.
 
 # Display the cropped image and the co-occurrence matrix.
 plt.figure()  # Create a new figure.

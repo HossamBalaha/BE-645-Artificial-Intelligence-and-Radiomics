@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 20th, 2024
-# Last Modification Date: May 22nd, 2025
+# Last Modification Date: Jun 5th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -79,17 +79,17 @@ kurtosis = np.sum(hist2D * (rng - mean) ** 4) / (count * stdDev ** 4)  # Measure
 exKurtosis = kurtosis - 3  # Excess kurtosis relative to a normal distribution.
 
 # Print the calculated statistics.
-print("Min: ", min)  # Print the minimum value.
-print("Max: ", max)  # Print the maximum value.
-print("Range: ", rng)  # Print the range of values.
-print("Count: ", count)  # Print the total count of values.
-print("Sum: ", sum)  # Print the sum of values.
-print("Mean: ", np.round(mean, 4))  # Print the mean value.
-print("Variance: ", np.round(variance, 4))  # Print the variance.
-print("Standard Deviation: ", np.round(stdDev, 4))  # Print the standard deviation.
-print("Skewness: ", np.round(skewness, 4))  # Print the skewness.
-print("Kurtosis: ", np.round(kurtosis, 4))  # Print the kurtosis.
-print("Excess Kurtosis: ", np.round(exKurtosis, 4))  # Print the excess kurtosis.
+print("Min:", min)  # Print the minimum value.
+print("Max:", max)  # Print the maximum value.
+print("Range:", rng)  # Print the range of values.
+print("Count:", count)  # Print the total count of values.
+print("Sum:", sum)  # Print the sum of values.
+print("Mean:", np.round(mean, 4))  # Print the mean value.
+print("Variance:", np.round(variance, 4))  # Print the variance.
+print("Standard Deviation:", np.round(stdDev, 4))  # Print the standard deviation.
+print("Skewness:", np.round(skewness, 4))  # Print the skewness.
+print("Kurtosis:", np.round(kurtosis, 4))  # Print the kurtosis.
+print("Excess Kurtosis:", np.round(exKurtosis, 4))  # Print the excess kurtosis.
 
 # Plot the histogram.
 plt.figure()  # Create a new figure for the plot.

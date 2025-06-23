@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jun 13th, 2025
+# Last Modification Date: Jun 23rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -14,11 +14,22 @@
 import os  # For file path operations.
 import sys  # For system-specific parameters and functions.
 import cv2  # For image processing tasks.
+import pandas as pd  # For data manipulation and analysis.
+# Install the `shutup` library to suppress warnings: pip install shutup
+import shutup  # To suppress the differ warnings.
 import numpy as np  # For numerical operations.
+import matplotlib.pyplot as plt  # For plotting and visualization.
+# You can import specific classes from scikit-learn as needed.
+from sklearn.preprocessing import *  # Import all preprocessing classes from scikit-learn.
+from sklearn.metrics import *  # Import all metrics classes from scikit-learn.
+from sklearn.model_selection import *  # Import all model selection classes from scikit-learn.
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
 sys.setrecursionlimit(10 ** 8)
+
+# Suppress warnings from the `shutup` library.
+shutup.please()  # Suppress all warnings from the `shutup` library.
 
 
 # ===========================================================================================
@@ -91,6 +102,84 @@ def ReadVolume(caseImgPaths, caseSegPaths):
   return volumeCropped  # Return the preprocessed 3D volume.
 
 
+def ExtractMultipleObjectsFromROI(
+  caseImg, caseSeg,
+  targetSize=(256, 256),
+  cntAreaThreshold=0,
+  sortByX=True,
+):
+  '''
+  Extracts multiple objects from a region of interest (ROI) in a medical image.
+
+  Parameters:
+    caseImg (numpy.ndarray): The input medical image.
+    caseSeg (numpy.ndarray): The segmentation mask indicating regions of interest.
+    targetSize (tuple): The target size for resizing images.
+    cntAreaThreshold (int): Minimum contour area to consider for extraction.
+    sortByX (bool): Whether to sort extracted regions by their x-coordinate.
+
+  Returns:
+    list: A list of extracted regions from the image.
+  '''
+
+  # Resize images to standard dimensions using cubic interpolation for quality.
+  caseImg = cv2.resize(caseImg, targetSize, interpolation=cv2.INTER_CUBIC)  # Resize scan image.
+  caseSeg = cv2.resize(caseSeg, targetSize, interpolation=cv2.INTER_CUBIC)  # Resize mask image.
+
+  # Binarize segmentation mask by thresholding to ensure only 0/255 values.
+  caseSeg[caseSeg > 0] = 255  # Convert any positive values to pure white.
+
+  # or you can apply:
+  # caseSeg = cv2.threshold(caseSeg, 127, 255, cv2.THRESH_BINARY)[1]  # Binarize mask.
+
+  # Perform sanity check on the segmentation mask to ensure valid content.
+  if (np.sum(caseSeg) <= 0):  # Calculate sum of all pixel values in mask.
+    # Raise error if mask contains no white pixels to prevent empty processing.
+    raise ValueError("The mask is completely black/empty. Please check the segmentation mask.")
+
+  # Detect contours in the segmentation mask using simple approximation method.
+  contours = cv2.findContours(caseSeg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  if (sortByX):  # Check if sorting by x-coordinate is requested.
+    # Sort detected contours from left-to-right based on their x-coordinate.
+    contours = sorted(contours[0], key=lambda x: cv2.boundingRect(x)[0], reverse=False)
+  else:
+    # If not sorting, just extract contours without sorting.
+    contours = contours[0] if (len(contours) == 2) else contours[1]
+
+  # Initialize empty list to store extracted region-of-interest (ROI) images.
+  regions = []
+
+  # Process each detected contour to extract individual anatomical structures.
+  for i in range(len(contours)):
+    # Calculate the area of the current contour for size filtering.
+    cntArea = cv2.contourArea(contours[i])
+    # Skip contours smaller than threshold to ignore noise/artifacts.
+    if (cntArea <= cntAreaThreshold):
+      continue
+
+    # Create blank mask matching image dimensions for current ROI.
+    regionMask = np.zeros_like(caseSeg)
+    # Select current contour from the list of detected contours.
+    regionCnt = contours[i]
+    # Fill contour area in the mask to create binary ROI representation.
+    cv2.fillPoly(regionMask, [regionCnt], 255)
+    # Apply mask to original image to isolate the anatomical structure.
+    roi = cv2.bitwise_and(caseImg, regionMask)
+    # Calculate bounding box coordinates around the masked region.
+    x, y, w, h = cv2.boundingRect(roi)
+    # Crop the region from the original image using bounding box coordinates.
+    cropped = roi[y:y + h, x:x + w]
+    # Add cropped ROI to the collection of extracted regions.
+    regions.append(cropped)
+
+  if (sortByX):  # Check if sorting by x-coordinate is requested.
+    # Sort extracted regions by their x-coordinate to maintain left-to-right order.
+    regions = sorted(regions, key=lambda x: cv2.boundingRect(x)[0], reverse=False)
+
+  # Return the list of extracted regions for further processing.
+  return regions
+
+
 # ===========================================================================================
 # Function(s) for calculating first-order statistical features from an image.
 # ===========================================================================================
@@ -124,6 +213,89 @@ def FirstOrderFeatures2D(img, mask, isNorm=True, ignoreZeros=True):
   # Loop through each possible value in the range [minVal, maxVal].
   for i in range(minVal, maxVal + 1):
     hist2D.append(np.count_nonzero(cropped == i))  # Count occurrences of the value `i` in the cropped ROI.
+  hist2D = np.array(hist2D)  # Convert the histogram list to a NumPy array.
+
+  # If ignoreZeros is True, set the first bin (background) to zero.
+  if (ignoreZeros and (minVal == 0)):
+    # Ignore the background (assumed to be the first bin in the histogram).
+    hist2D = hist2D[1:]  # Remove the first bin (background).
+    minVal += 1  # Adjust the minimum value to exclude the background.
+
+  # Calculate the total count of values in the histogram before normalization.
+  freqCount = np.sum(hist2D)  # Sum all frequencies in the histogram.
+
+  # Normalize the histogram if the flag is set.
+  if (isNorm):
+    # Normalize the histogram to represent probabilities.
+    hist2D = hist2D / np.sum(hist2D)  # Divide each bin by the total count to normalize.
+
+  # Calculate the total count of values from the histogram after normalization.
+  count = np.sum(hist2D)  # Sum all probabilities in the normalized histogram.
+
+  # Determine the range of values in the histogram.
+  rng = np.arange(minVal, maxVal + 1)  # Create an array of values from `minVal` to `maxVal`.
+
+  # Calculate the sum of values from the histogram.
+  sumVal = np.sum(hist2D * rng)  # Multiply each value by its frequency and sum the results.
+
+  # Calculate the mean (average) value from the histogram.
+  mean = sumVal / count  # Divide the total sum by the total count.
+
+  # Calculate the variance from the histogram.
+  variance = np.sum(hist2D * (rng - mean) ** 2) / count  # Measure of the spread of the data.
+
+  # Calculate the standard deviation from the histogram.
+  stdDev = np.sqrt(variance)  # Square root of the variance.
+
+  # Calculate the skewness from the histogram.
+  skewness = np.sum(hist2D * (rng - mean) ** 3) / (count * stdDev ** 3)  # Measure of asymmetry in the data.
+
+  # Calculate the kurtosis from the histogram.
+  kurtosis = np.sum(hist2D * (rng - mean) ** 4) / (count * stdDev ** 4)  # Measure of the "tailedness" of the data.
+
+  # Calculate the excess kurtosis from the histogram.
+  exKurtosis = kurtosis - 3  # Excess kurtosis relative to a normal distribution.
+
+  # Store the results in a dictionary.
+  results = {
+    "Min"               : minVal,  # Minimum pixel value.
+    "Max"               : maxVal,  # Maximum pixel value.
+    "Count"             : count,  # Total count of pixels after normalization.
+    "Frequency Count"   : freqCount,  # Total count of pixels before normalization.
+    "Sum"               : sumVal,  # Sum of pixel values.
+    "Mean"              : mean,  # Mean pixel value.
+    "Variance"          : variance,  # Variance of pixel values.
+    "Standard Deviation": stdDev,  # Standard deviation of pixel values.
+    "Skewness"          : skewness,  # Skewness of pixel values.
+    "Kurtosis"          : kurtosis,  # Kurtosis of pixel values.
+    "Excess Kurtosis"   : exKurtosis,  # Excess kurtosis of pixel values.
+  }
+
+  return results, hist2D
+
+
+def FirstOrderFeatures2DV2(data, isNorm=True, ignoreZeros=True):
+  """
+  Calculate first-order statistical features from an image using a mask.
+
+  Args:
+      data (numpy.ndarray): The input image as a 2D NumPy array.
+      isNorm (bool): Flag to indicate whether to normalize the histogram.
+      ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
+
+  Returns:
+      results (dict): A dictionary containing the calculated first-order features.
+      hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
+  """
+
+  # Calculate the histogram of the cropped ROI.
+  minVal = int(np.min(data))  # Find the minimum pixel value in the cropped ROI.
+  maxVal = int(np.max(data))  # Find the maximum pixel value in the cropped ROI.
+  hist2D = []  # Initialize an empty list to store the histogram values.
+
+  # Loop through each possible value in the range [minVal, maxVal].
+  for i in range(minVal, maxVal + 1):
+    hist2D.append(np.count_nonzero(data == i))  # Count occurrences of the value `i` in the cropped ROI.
   hist2D = np.array(hist2D)  # Convert the histogram list to a NumPy array.
 
   # If ignoreZeros is True, set the first bin (background) to zero.
@@ -1176,6 +1348,360 @@ def CalculateGLSZMSizeZoneMatrix3D(volume, connectivity=6, isNorm=True, ignoreZe
 
     # Return the size-zone matrix, dictionary, and metadata.
   return szMatrix, szDict, N, Z  # Return the computed outputs.
+
+
+# ===========================================================================================
+# Function(s) for calculating performance.
+# ===========================================================================================
+
+def CalculatePerformanceMetrics(confMatrix, eps=1e-10):
+  """
+  Calculate performance metrics from a confusion matrix.
+
+  Parameters:
+  confMatrix (list of list): Confusion matrix as a nested list.
+  eps (float): Small value to avoid division by zero.
+
+  Returns:
+  dict: A dictionary containing performance metrics including:
+        - True Positives (TP)
+        - False Positives (FP)
+        - False Negatives (FN)
+        - True Negatives (TN)
+        - Macro Precision
+        - Macro Recall
+        - Macro F1
+        - Macro Accuracy
+        - Macro Specificity
+        - Micro Precision
+        - Micro Recall
+        - Micro F1
+        - Micro Accuracy
+        - Micro Specificity
+        - Weights
+        - Weighted Precision
+        - Weighted Recall
+        - Weighted F1
+        - Weighted Accuracy
+        - Weighted Specificity
+  """
+  # Convert the confusion matrix to a NumPy array for easier manipulation.
+  confMatrix = np.array(confMatrix)
+
+  # Check if the confusion matrix is for binary classification.
+  noOfClasses = confMatrix.shape[0]
+  if (noOfClasses > 2):
+    # Calculate True Positives (TP) as the diagonal elements of the confusion matrix.
+    TP = np.diag(confMatrix)
+    # Calculate False Positives (FP) as the sum of each column minus the TP.
+    FP = np.sum(confMatrix, axis=0) - TP
+    # Calculate False Negatives (FN) as the sum of each row minus the TP.
+    FN = np.sum(confMatrix, axis=1) - TP
+    # Calculate True Negatives (TN) as the total sum of the matrix minus TP, FP, and FN.
+    TN = np.sum(confMatrix) - (TP + FP + FN)
+  else:
+    # For binary classification, the confusion matrix is a 2x2 matrix.
+    # Unravel the confusion matrix to get the TP, FP, FN, and TN.
+    # The order of the elements is TN, FP, FN, TP.
+    TN, FP, FN, TP = confMatrix.ravel()
+
+  # Avoid division by zero by adding a small epsilon value.
+  TP = TP + eps
+  FP = FP + eps
+  FN = FN + eps
+  TN = TN + eps
+
+  # Create a dictionary to hold the calculated performance metrics and
+  # the TP, FP, FN, TN vectors.
+  metrics = {
+    "TP": TP,
+    "FP": FP,
+    "FN": FN,
+    "TN": TN,
+  }
+
+  # Calculate precision using macro averaging: mean of TP / (TP + FP) for each class.
+  precision = np.mean(TP / (TP + FP))
+  # Calculate recall using macro averaging: mean of TP / (TP + FN) for each class.
+  recall = np.mean(TP / (TP + FN))
+  # Calculate F1 score using macro averaging: harmonic mean of precision and recall.
+  f1 = 2 * precision * recall / (precision + recall)
+  # Calculate accuracy using macro averaging: sum of TP and TN divided by the total sum of the matrix.
+  accuracy = np.mean(TP + TN) / np.sum(confMatrix)
+  # Calculate specificity using macro averaging: mean of TN / (TN + FP) for each class.
+  specificity = np.mean(TN / (TN + FP))
+
+  metrics.update({
+    "Macro Precision"  : precision,
+    "Macro Recall"     : recall,
+    "Macro F1"         : f1,
+    "Macro Accuracy"   : accuracy,
+    "Macro Specificity": specificity,
+  })
+
+  # Calculate precision using micro averaging: sum of TP divided by the sum of TP and FP.
+  precision = np.sum(TP) / np.sum(TP + FP)
+  # Calculate recall using micro averaging: sum of TP divided by the sum of TP and FN.
+  recall = np.sum(TP) / np.sum(TP + FN)
+  # Calculate F1 score using micro averaging: harmonic mean of precision and recall.
+  f1 = 2 * precision * recall / (precision + recall)
+  # Calculate accuracy using micro averaging: sum of TP and TN divided by TP, TN, FP, and FN.
+  accuracy = np.sum(TP + TN) / np.sum(TP + TN + FP + FN)
+  # Calculate specificity using micro averaging: sum of TN divided by the sum of TN and FP.
+  specificity = np.sum(TN) / np.sum(TN + FP)
+
+  metrics.update({
+    "Micro Precision"  : precision,
+    "Micro Recall"     : recall,
+    "Micro F1"         : f1,
+    "Micro Accuracy"   : accuracy,
+    "Micro Specificity": specificity,
+  })
+
+  # Calculate the number of samples per class by summing the rows of the confusion matrix.
+  samples = np.sum(confMatrix, axis=1)
+
+  # Calculate the weights for each class as the proportion of samples in that class.
+  weights = samples / np.sum(confMatrix)
+
+  # Calculate precision using weighted averaging: sum of precision per class multiplied by weights.
+  precision = np.sum(TP / (TP + FP) * weights)
+  # Calculate recall using weighted averaging: sum of recall per class multiplied by weights.
+  recall = np.sum(TP / (TP + FN) * weights)
+  # Calculate F1 score using weighted averaging: harmonic mean of weighted precision and recall.
+  f1 = 2 * precision * recall / (precision + recall)
+  # Calculate accuracy using weighted averaging: sum of TP and TN divided by the total sum of the matrix.
+  accuracy = np.sum((TP + TN) * weights) / np.sum(confMatrix)
+  # Calculate specificity using weighted averaging: sum of specificity per class multiplied by weights.
+  specificity = np.sum(TN / (TN + FP) * weights)
+
+  metrics.update({
+    "Weights"             : weights,
+    "Weighted Precision"  : precision,
+    "Weighted Recall"     : recall,
+    "Weighted F1"         : f1,
+    "Weighted Accuracy"   : accuracy,
+    "Weighted Specificity": specificity,
+  })
+
+  return metrics
+
+
+# ===========================================================================================
+# Function(s) for machine learning classification.
+# ===========================================================================================
+
+def GetScalerObject(scalerName):
+  """
+  Get the scaler object based on the given name.
+
+  Parameters:
+      scalerName (str): Name of the scaler.
+
+  Returns:
+      scaler (object): Scaler object.
+  """
+  if (scalerName == "Standard"):
+    from sklearn.preprocessing import StandardScaler
+    return StandardScaler()
+  elif (scalerName == "MinMax"):
+    from sklearn.preprocessing import MinMaxScaler
+    return MinMaxScaler()
+  elif (scalerName == "Robust"):
+    from sklearn.preprocessing import RobustScaler
+    return RobustScaler()
+  elif (scalerName == "MaxAbs"):
+    from sklearn.preprocessing import MaxAbsScaler
+    return MaxAbsScaler()
+  elif (scalerName == "QT"):
+    from sklearn.preprocessing import QuantileTransformer
+    return QuantileTransformer()
+  elif (scalerName == "Normalizer"):
+    from sklearn.preprocessing import Normalizer
+    return Normalizer()
+  # You can add more scalers as needed.
+  else:
+    raise ValueError("Invalid scaler name.")
+
+
+def GetMLClassificationModelObject(modelName, hyperparameters={}):
+  """
+  Get the machine learning classification model object based on the given name.
+
+  Parameters:
+      modelName (str): Name of the model.
+
+  Returns:
+      model (object): Model object.
+  """
+  if (modelName == "MLP"):
+    from sklearn.neural_network import MLPClassifier
+    return MLPClassifier(**hyperparameters)
+  elif (modelName == "RF"):
+    from sklearn.ensemble import RandomForestClassifier
+    return RandomForestClassifier(**hyperparameters)
+  elif (modelName == "AB"):
+    from sklearn.ensemble import AdaBoostClassifier
+    return AdaBoostClassifier(**hyperparameters)
+  elif (modelName == "KNN"):
+    from sklearn.neighbors import KNeighborsClassifier
+    return KNeighborsClassifier(**hyperparameters)
+  elif (modelName == "DT"):
+    from sklearn.tree import DecisionTreeClassifier
+    return DecisionTreeClassifier(**hyperparameters)
+  elif (modelName == "SVC"):
+    from sklearn.svm import SVC
+    return SVC(**hyperparameters)
+  elif (modelName == "GNB"):
+    from sklearn.naive_bayes import GaussianNB
+    return GaussianNB(**hyperparameters)
+  elif (modelName == "LR"):
+    from sklearn.linear_model import LogisticRegression
+    return LogisticRegression(**hyperparameters)
+  elif (modelName == "SGD"):
+    from sklearn.linear_model import SGDClassifier
+    return SGDClassifier(**hyperparameters)
+  elif (modelName == "GB"):
+    from sklearn.ensemble import GradientBoostingClassifier
+    return GradientBoostingClassifier(**hyperparameters)
+  elif (modelName == "Bagging"):
+    from sklearn.ensemble import BaggingClassifier
+    return BaggingClassifier(**hyperparameters)
+  elif (modelName == "ETs"):
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(**hyperparameters)
+  elif (modelName == "XGB"):
+    from xgboost import XGBClassifier
+    return XGBClassifier(**hyperparameters)
+  elif (modelName == "LGBM"):
+    from lightgbm import LGBMClassifier
+    return LGBMClassifier(**hyperparameters)
+  elif (modelName == "Voting"):
+    from sklearn.ensemble import VotingClassifier
+    return VotingClassifier(**hyperparameters)
+  elif (modelName == "Stacking"):
+    from sklearn.ensemble import StackingClassifier
+    return StackingClassifier(**hyperparameters)
+  # You can add more models as needed.
+  else:
+    raise ValueError("Invalid model name.")
+
+
+def MachineLearningClassificationV1(
+  datasetFilePath,  # Dataset file name (CSV format).
+  scalerName,  # Name of the scaler to use.
+  modelName,  # Name of the machine learning classification model.
+  testRatio=0.2,  # Ratio of the test data.
+  targetColumn="Class",  # Name of the target column in the dataset.
+  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+):
+  """
+  Perform machine learning classification on the given dataset.
+
+  Parameters:
+      datasetFilePath (str): Dataset file name (CSV format).
+      scalerName (str): Name of the scaler to use.
+      modelName (str): Name of the machine learning classification model.
+      testRatio (float): Ratio of the test data.
+      targetColumn (str): Name of the target column in the dataset.
+      dropFirstColumn (bool): Whether to drop the first column (usually an index or ID).
+
+  Returns:
+      metrics (dict): Dictionary containing the calculated performance metrics.
+  """
+
+  # Read the CSV file into a pandas DataFrame.
+  data = pd.read_csv(datasetFilePath)
+
+  # Check if dropFirstColumn is True, then drop the first column.
+  if (dropFirstColumn):
+    # Drop the first column if it is not the target column.
+    if (data.columns[0] != targetColumn):
+      data = data.drop(data.columns[0], axis=1)
+
+  # Drop empty columns from the DataFrame.
+  data = data.dropna(axis=1, how="all")
+
+  # Drop rows with null or empty values from the DataFrame.
+  data = data.dropna()
+
+  # Features (X) are all columns except the "Class" column.
+  X = data.drop(targetColumn, axis=1)
+
+  # Target (y) is the "Class" column.
+  y = data[targetColumn]
+
+  # Encode the target labels into numerical values using LabelEncoder.
+  le = LabelEncoder()
+  yEnc = le.fit_transform(y)
+  labels = le.classes_
+
+  # Split the data into training and testing sets.
+  xTrain, xTest, yTrain, yTest = train_test_split(
+    X, yEnc,
+    test_size=testRatio,
+    random_state=np.random.randint(0, 1000),
+    stratify=yEnc,
+  )
+
+  # Create a scaler object to scale the features.
+  scaler = GetScalerObject(scalerName)
+
+  # Fit the scaler on the training data and transform it.
+  xTrain = scaler.fit_transform(xTrain)
+
+  # Transform the test data using the fitted scaler.
+  xTest = scaler.transform(xTest)
+
+  # Train a model on the training data.
+  model = GetMLClassificationModelObject(modelName)
+  model.fit(xTrain, yTrain)
+
+  # Evaluate the model by making predictions on the test data.
+  predTest = model.predict(xTest)
+
+  # Calculate the confusion matrix using the true and predicted labels.
+  cm = confusion_matrix(yTest, predTest)
+
+  # Calculate performance metrics.
+  metrics = CalculatePerformanceMetrics(cm, eps=1e-10)
+
+  # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
+  # Print the calculated metrics with 4 decimal places.
+  # for key, value in metrics.items():
+  #   print(f"{key}: {np.round(value, 4)}")
+
+  # UNCOMMENT THE FOLLOWING CODE TO SAVE THE INDIVIDUAL METRICS IF REQUIRED.
+  # Save the metrics in a CSV file for future reference.
+  # df = pd.DataFrame(metrics.items(), columns=["Metric", "Value"])
+  # df.to_csv(
+  #   os.path.join(storagePath, f"{filename.split('.')[0]} {scalerName} {modelName} Metrics.csv"),
+  #   index=False
+  # )
+
+  # Display the confusion matrix using ConfusionMatrixDisplay.
+  disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,  # Pass the confusion matrix.
+    display_labels=le.classes_,  # Use the encoded labels for display.
+  )
+  # Create a plot for the confusion matrix.
+  fig, ax = plt.subplots(figsize=(8, 8))
+  disp.plot(
+    cmap=plt.cm.Blues,  # Set the color map.
+    values_format="d",  # Set the format of the values.
+    xticks_rotation="horizontal",  # Set the x-axis labels rotation.
+    colorbar=True,  # Show the color bar.
+    ax=ax,  # Set the axis.
+  )
+  plt.title("Confusion Matrix", fontsize=16)  # Set the title.
+  plt.xlabel("Predicted Label", fontsize=14)  # Set the axis labels.
+  plt.ylabel("True Label", fontsize=14)  # Set the axis labels.
+  plt.tight_layout()  # Adjust the layout to fit the plot.
+
+  pltObject = plt.gcf()  # Get the current figure object.
+
+  # Return the calculated metrics and the figure object.
+  return metrics, pltObject
 
 
 # ===========================================================================================

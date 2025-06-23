@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 19th, 2025
-# Last Modification Date: Jun 20th, 2025
+# Last Modification Date: Jun 23rd, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -21,7 +21,7 @@ from HMB_Summer_2025_Helpers import *  # Import custom helper functions.
 # Define the different parameters for feature extraction.
 extractionParams = {
   "FirstOrderFeatures": {
-    "turnOn": False,  # Whether to calculate the first order features.
+    "turnOn": True,  # Whether to calculate the first order features.
   },
   "GLCM"              : {
     "d"          : [1, 2, 3],  # Distance between voxel pairs.
@@ -35,7 +35,7 @@ extractionParams = {
   },
   "GLSZM"             : {
     "connectivity": [4],  # Connectivity type.
-    "turnOn"      : True,  # Whether to calculate the GLSZM features.
+    "turnOn"      : False,  # Whether to calculate the GLSZM features.
   },
   "targetSize"        : (128, 128),  # Target size for resizing images.
   "isNorm"            : True,  # Whether to normalize the features.

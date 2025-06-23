@@ -27,7 +27,7 @@ storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures) Feature
 # storageFolderName = r"COVID-19 Radiography Database (GLCM) Features"
 
 # Load the data from the specified CSV file.
-baseDir = "Data"  # Base directory.
+# baseDir = "Data"  # Base directory.
 # datasetFilename = r"COVID-19 Radiography Database (GLRLM) Features.csv"
 # storageFolderName = r"COVID-19 Radiography Database (GLRLM) Features"
 

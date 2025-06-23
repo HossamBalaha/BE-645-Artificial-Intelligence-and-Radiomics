@@ -32,9 +32,9 @@ storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures) Feature
 # storageFolderName = r"COVID-19 Radiography Database (GLRLM) Features"
 
 # Load the data from the specified CSV file.
-baseDir = "Data"  # Base directory.
-datasetFilename = r"COVID-19 Radiography Database (GLSZM) Features.csv"
-storageFolderName = r"COVID-19 Radiography Database (GLSZM) Features"
+# baseDir = "Data"  # Base directory.
+# datasetFilename = r"COVID-19 Radiography Database (GLSZM) Features.csv"
+# storageFolderName = r"COVID-19 Radiography Database (GLSZM) Features"
 
 # Create the storage folder path if it does not exist.
 storageFolderPath = os.path.join(baseDir, storageFolderName)

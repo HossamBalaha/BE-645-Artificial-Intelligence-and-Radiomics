@@ -18,9 +18,9 @@ import pandas as pd  # For data manipulation and analysis.
 from HMB_Summer_2025_Helpers import *
 
 # Load the data from the specified CSV file.
-baseDir = "Data"  # Base directory.
-datasetFilename = r"COVID-19 Radiography Database (FirstOrderFeatures) Features.csv"
-storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures) Features"
+# baseDir = "Data"  # Base directory.
+# datasetFilename = r"COVID-19 Radiography Database (FirstOrderFeatures) Features.csv"
+# storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures) Features"
 
 # Load the data from the specified CSV file.
 # baseDir = "Data"  # Base directory.
@@ -36,6 +36,11 @@ storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures) Feature
 # baseDir = "Data"  # Base directory.
 # datasetFilename = r"COVID-19 Radiography Database (GLSZM) Features.csv"
 # storageFolderName = r"COVID-19 Radiography Database (GLSZM) Features"
+
+# Load the data from the specified CSV file.
+baseDir = "Data"  # Base directory.
+datasetFilename = r"COVID-19 Radiography Database (FirstOrderFeatures-GLCM) Features.csv"
+storageFolderName = r"COVID-19 Radiography Database (FirstOrderFeatures-GLCM) Features"
 
 # Create the storage folder path if it does not exist.
 storageFolderPath = os.path.join(baseDir, storageFolderName)
@@ -85,6 +90,9 @@ for modelName in tqdm.tqdm(models, desc="Models"):
         os.path.join(baseDir, datasetFilename),  # Path to the dataset file.
         scalerName,  # Name of the scaler to be used.
         modelName,  # Name of the machine learning model to be used.
+        testRatio=0.2,  # Ratio of the test data.
+        targetColumn="Class",  # Name of the target column in the dataset.
+        dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
       )
 
       # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
@@ -128,4 +136,4 @@ df.to_csv(
   index=False,
 )
 
-print("Done! The metrics history has been saved successfully.")
+print("Done! The experiment has been completed successfully.")

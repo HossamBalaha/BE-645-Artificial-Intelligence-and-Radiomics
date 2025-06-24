@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jun 23rd, 2025
+# Last Modification Date: Jun 24th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -1354,13 +1354,18 @@ def CalculateGLSZMSizeZoneMatrix3D(volume, connectivity=6, isNorm=True, ignoreZe
 # Function(s) for calculating performance.
 # ===========================================================================================
 
-def CalculatePerformanceMetrics(confMatrix, eps=1e-10):
+def CalculatePerformanceMetrics(
+  confMatrix,
+  eps=1e-10,
+  addWeightedAverage=False,
+):
   """
   Calculate performance metrics from a confusion matrix.
 
   Parameters:
   confMatrix (list of list): Confusion matrix as a nested list.
   eps (float): Small value to avoid division by zero.
+  addWeightedAverage (bool): Whether to include weighted averages in the output.
 
   Returns:
   dict: A dictionary containing performance metrics including:
@@ -1439,6 +1444,13 @@ def CalculatePerformanceMetrics(confMatrix, eps=1e-10):
     "Macro Specificity": specificity,
   })
 
+  # If requested, calculate the macro average of the metrics.
+  if (addWeightedAverage):
+    avg = (precision + recall + f1 + accuracy + specificity) / 5.0
+    metrics.update({
+      "Macro Average": avg,
+    })
+
   # Calculate precision using micro averaging: sum of TP divided by the sum of TP and FP.
   precision = np.sum(TP) / np.sum(TP + FP)
   # Calculate recall using micro averaging: sum of TP divided by the sum of TP and FN.
@@ -1457,6 +1469,13 @@ def CalculatePerformanceMetrics(confMatrix, eps=1e-10):
     "Micro Accuracy"   : accuracy,
     "Micro Specificity": specificity,
   })
+
+  # If requested, calculate the micro average of the metrics.
+  if (addWeightedAverage):
+    avg = (precision + recall + f1 + accuracy + specificity) / 5.0
+    metrics.update({
+      "Micro Average": avg,
+    })
 
   # Calculate the number of samples per class by summing the rows of the confusion matrix.
   samples = np.sum(confMatrix, axis=1)
@@ -1483,6 +1502,13 @@ def CalculatePerformanceMetrics(confMatrix, eps=1e-10):
     "Weighted Accuracy"   : accuracy,
     "Weighted Specificity": specificity,
   })
+
+  # If requested, calculate the weighted average of the metrics.
+  if (addWeightedAverage):
+    avg = (precision + recall + f1 + accuracy + specificity) / 5.0
+    metrics.update({
+      "Weighted Average": avg,
+    })
 
   return metrics
 
@@ -1664,20 +1690,11 @@ def MachineLearningClassificationV1(
   cm = confusion_matrix(yTest, predTest)
 
   # Calculate performance metrics.
-  metrics = CalculatePerformanceMetrics(cm, eps=1e-10)
-
-  # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
-  # Print the calculated metrics with 4 decimal places.
-  # for key, value in metrics.items():
-  #   print(f"{key}: {np.round(value, 4)}")
-
-  # UNCOMMENT THE FOLLOWING CODE TO SAVE THE INDIVIDUAL METRICS IF REQUIRED.
-  # Save the metrics in a CSV file for future reference.
-  # df = pd.DataFrame(metrics.items(), columns=["Metric", "Value"])
-  # df.to_csv(
-  #   os.path.join(storagePath, f"{filename.split('.')[0]} {scalerName} {modelName} Metrics.csv"),
-  #   index=False
-  # )
+  metrics = CalculatePerformanceMetrics(
+    cm,  # Pass the confusion matrix.
+    eps=1e-10,  # Small value to avoid division by zero.
+    addWeightedAverage=True,  # Whether to include weighted averages in the output.
+  )
 
   # Display the confusion matrix using ConfusionMatrixDisplay.
   disp = ConfusionMatrixDisplay(
@@ -1700,8 +1717,15 @@ def MachineLearningClassificationV1(
 
   pltObject = plt.gcf()  # Get the current figure object.
 
-  # Return the calculated metrics and the figure object.
-  return metrics, pltObject
+  # Create a dictionary to hold the objects for saving.
+  objects = {
+    "Model"       : model,
+    "Scaler"      : scaler,
+    "LabelEncoder": le,
+  }
+
+  # Return the performance metrics, plot object, and objects for saving.
+  return metrics, pltObject, objects
 
 
 # ===========================================================================================

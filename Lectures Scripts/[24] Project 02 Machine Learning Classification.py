@@ -6,13 +6,14 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 13th, 2024
-# Last Modification Date: Jun 23rd, 2025
+# Last Modification Date: Jun 24th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
 # Import necessary libraries.
 import os  # For file and directory operations.
 import tqdm  # For progress bar in loops.
+import pickle  # For saving and loading Python objects.
 import pandas as pd  # For data manipulation and analysis.
 from HMB_Summer_2025_Helpers import *
 
@@ -80,15 +81,20 @@ for modelName in tqdm.tqdm(models, desc="Models"):
   for scalerName in tqdm.tqdm(scalers, desc="Scalers", leave=False):
     try:
       # Call the function to perform machine learning classification.
-      metrics, pltObject = MachineLearningClassificationV1(
+      metrics, pltObject, objects = MachineLearningClassificationV1(
         os.path.join(baseDir, datasetFilename),  # Path to the dataset file.
         scalerName,  # Name of the scaler to be used.
         modelName,  # Name of the machine learning model to be used.
       )
 
+      # UNCOMMENT THE FOLLOWING CODE TO PRINT THE METRICS WITH 4 DECIMAL PLACES.
+      # Print the calculated metrics with 4 decimal places.
+      # for key, value in metrics.items():
+      #   print(f"{key}: {np.round(value, 4)}")
+
       # Save the confusion matrix plot with a specific filename as a PNG image.
       pltObject.figure.savefig(
-        os.path.join(storageFolderPath, f"{scalerName} {modelName} CM.png"),
+        os.path.join(storageFolderPath, f"{modelName}_{scalerName}_CM.png"),
         bbox_inches="tight",  # Adjust the bounding box to fit the plot.
         dpi=720,  # Set the DPI for the saved image.
       )
@@ -96,6 +102,13 @@ for modelName in tqdm.tqdm(models, desc="Models"):
       # pltObject.figure.show()  # Display the confusion matrix plot.
       pltObject.figure.clf()  # Clear the figure to free up memory.
       plt.close()  # Close the figure to free up memory.
+
+      # Save the trained model and scaler objects using pickle.
+      with open(
+        os.path.join(storageFolderPath, f"{modelName}_{scalerName}.p"),
+        "wb",  # Open the file in write-binary mode.
+      ) as f:
+        pickle.dump(objects, f)  # Save the model and scaler objects.
 
       # Append the model name and scaler name to the metrics dictionary.
       history.append(

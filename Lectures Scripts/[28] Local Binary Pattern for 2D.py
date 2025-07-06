@@ -85,8 +85,11 @@ hist2DLBP = np.array(hist2DLBP)
 # Calculate percentiles of the histogram to summarize the distribution.
 quantiles = [10, 25, 50, 75, 90]
 percentiles = np.percentile(hist2D, quantiles)
+percentilesLBP = np.percentile(hist2DLBP, quantiles)
+
 print("Percentiles:")
-print(percentiles)
+print("Histogram Percentiles:", percentiles)
+print("LBP Histogram Percentiles:", percentilesLBP)
 
 # Visualize the original image and the computed LBP image side by side.
 plt.figure()

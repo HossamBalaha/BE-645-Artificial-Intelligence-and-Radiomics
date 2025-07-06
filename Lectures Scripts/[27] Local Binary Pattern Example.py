@@ -15,7 +15,7 @@ import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting and visualization.
 from HMB_Summer_2025_Helpers import *
 
-# Define the input matrix A containfing integer values.
+# Define the input matrix A containing integer values.
 A = [
   [17, 32, 32, 47, 11],
   [37, 21, 22, 18, 4],

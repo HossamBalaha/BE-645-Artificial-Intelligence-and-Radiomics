@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jun 24th, 2025
+# Last Modification Date: Jul 6th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -1432,6 +1432,11 @@ def BuildLBPKernel(
   # Rotate the coordinates list by thetaShift positions.
   coordinates = coordinates[thetaShift:] + coordinates[:thetaShift]  # Shift the coordinates list.
 
+  # If the rotation direction is clockwise, rotate the kernel counterclockwise.
+  if (isClockwise):
+    # Reverse the order of coordinates except the first one.
+    coordinates = [coordinates[0]] + coordinates[1:][::-1]
+
   # Assign powers of 2 to the edge elements in the kernel.
   counter = 0  # Counter to track the current power of 2.
 
@@ -1443,9 +1448,8 @@ def BuildLBPKernel(
       kernel[y, x] = 2 ** counter  # Assign 2^counter to the current position.
       counter += 1  # Increment the counter for the next power of 2.
 
-  # If the rotation direction is not clockwise, rotate the kernel counterclockwise.
-  if (not isClockwise):
-    kernel = kernel.T
+  # Transpose the kernel to match the expected orientation.
+  kernel = kernel.T
 
   return kernel  # Return the final kernel matrix.
 
@@ -1484,9 +1488,16 @@ def LocalBinaryPattern2D(
   # Check if the angle (theta) is outside the valid range (0 to 360 degrees), raising a ValueError if true.
   if (theta < 0 or theta > 360):
     raise ValueError("Theta must be between 0 and 360 degrees.")
-  # Check if the angle (theta) is not a multiple of 45 degrees, raising a ValueError if true.
-  if (theta % 45 != 0):
-    raise ValueError("Theta must be a multiple of 45 degrees.")
+
+  # Calculate the total number of elements on the edges.
+  noOfElements = 8 * distance  # Total number of edge elements is 8 * distance.
+
+  # Calculate the angle between consecutive elements.
+  angle = 360.0 / float(noOfElements)  # Divide 360 degrees by the total number of edge elements.
+
+  # Check if the angle (theta) is not a multiple of {angle} degrees, raising a ValueError if true.
+  if (theta % angle != 0):
+    raise ValueError(f"Theta must be a multiple of {angle} degrees.")
 
   # Calculate the size of the kernel window based on the distance parameter.
   windowSize = distance * 2 + 1
@@ -1503,6 +1514,7 @@ def LocalBinaryPattern2D(
 
   # Initialize an empty matrix to store the computed LBP values.
   lbpMatrix = np.zeros(matrix.shape, dtype=np.uint32)
+
   # Pad the input matrix with zeros to handle boundary conditions during convolution.
   paddedA = np.pad(matrix, distance, mode="constant", constant_values=0)
 

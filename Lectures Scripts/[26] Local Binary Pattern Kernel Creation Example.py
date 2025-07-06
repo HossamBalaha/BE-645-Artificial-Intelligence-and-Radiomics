@@ -17,10 +17,10 @@ from HMB_Summer_2025_Helpers import *
 distance = 1
 
 # Specify whether the LBP computation should follow a clockwise direction.
-isClockwise = False
+isClockwise = True
 
 # Define the starting angle (theta) for the LBP computation, measured in degrees.
-thetaDegree = 225  # Start from the top-left corner.
+thetaDegree = 135  # Start from the top-left corner.
 
 # Create a kernel matrix to represent the LBP pattern weights.
 kernel = BuildLBPKernel(

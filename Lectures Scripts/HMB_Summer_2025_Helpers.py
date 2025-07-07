@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jul 6th, 2025
+# Last Modification Date: Jul 7th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -17,6 +17,7 @@ import cv2  # For image processing tasks.
 import pandas as pd  # For data manipulation and analysis.
 # Install the `shutup` library to suppress warnings: pip install shutup
 import shutup  # To suppress the differ warnings.
+import trimesh  # For 3D mesh operations and visualization.
 import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting and visualization.
 # You can import specific classes from scikit-learn as needed.
@@ -36,7 +37,7 @@ shutup.please()  # Suppress all warnings from the `shutup` library.
 # Function(s) for reading and preprocessing 3D medical imaging data.
 # ===========================================================================================
 
-def ReadVolume(caseImgPaths, caseSegPaths):
+def ReadVolume(caseImgPaths, caseSegPaths, raiseErrors=True):
   """
   Read and preprocess a 3D volume from a set of 2D slices and their corresponding segmentation masks.
 
@@ -47,6 +48,7 @@ def ReadVolume(caseImgPaths, caseSegPaths):
   Returns:
       volumeCropped (numpy.ndarray): A 3D NumPy array representing the preprocessed volume.
   """
+
   volumeCropped = []  # Initialize a list to store the cropped slices.
 
   # Loop through each slice and its corresponding segmentation mask.
@@ -67,7 +69,12 @@ def ReadVolume(caseImgPaths, caseSegPaths):
     cropped = roi[y:y + h, x:x + w]  # Crop the ROI using the bounding box coordinates.
 
     if (np.sum(cropped) <= 0):
-      raise ValueError("The cropped image is empty. Please check the segmentation mask.")
+      # Raise an error if the cropped image is empty and raiseErrors is True.
+      if (raiseErrors):
+        raise ValueError("The cropped image is empty. Please check the segmentation mask.")
+      else:
+        # If raiseErrors is False, skip the empty slice and continue processing.
+        continue
 
     # Append the cropped slice to the list.
     volumeCropped.append(cropped)
@@ -100,6 +107,90 @@ def ReadVolume(caseImgPaths, caseSegPaths):
   volumeCropped = np.array(volumeCropped)
 
   return volumeCropped  # Return the preprocessed 3D volume.
+
+
+def ReadVolumeSpecificClasses(caseImgPaths, caseSegPaths, specificClasses=[]):
+  """
+  Read and preprocess a 3D volume from a set of 2D slices and their corresponding segmentation masks.
+
+  Args:
+      caseImgPaths (list): List of file paths to medical image slices in BMP format.
+      caseSegPaths (list): List of file paths to segmentation masks matching the slices.
+      specificClasses (list): List of specific classes to include in the segmentation.
+        If empty, all classes are included.
+
+  Returns:
+      volumeCropped (numpy.ndarray): 3D array of preprocessed and aligned medical imaging data.
+  """
+  # Initialize empty list to store processed slices.
+  volumeCropped = []
+
+  # Process each image-segmentation pair in the input lists.
+  for i in range(len(caseImgPaths)):
+    # Verify both image and segmentation files exist before processing.
+    if (not os.path.exists(caseImgPaths[i])) or (not os.path.exists(caseSegPaths[i])):
+      raise FileNotFoundError("One or more files were not found. Please check the file paths.")
+
+    # Load grayscale medical image slice (8-bit depth).
+    caseImg = cv2.imread(caseImgPaths[i], cv2.IMREAD_GRAYSCALE)
+    # Load corresponding binary segmentation mask.
+    caseSeg = cv2.imread(caseSegPaths[i], cv2.IMREAD_GRAYSCALE)
+
+    # Check if specific classes are provided for segmentation.
+    if (specificClasses):
+      # Create a mask for the specific classes.
+      mask = np.zeros_like(caseSeg)
+      for classId in specificClasses:
+        mask[caseSeg == classId] = 255
+      caseSeg = mask
+
+    # Extract region of interest using bitwise AND operation between image and mask.
+    roi = cv2.bitwise_and(caseImg, caseSeg)
+
+    # Calculate bounding box coordinates of non-zero region in ROI.
+    x, y, w, h = cv2.boundingRect(roi)
+    # Crop image to tight bounding box around segmented area.
+    cropped = roi[y:y + h, x:x + w]
+
+    # Validate cropped slice contains actual data (not just background).
+    if (np.sum(cropped) <= 0):
+      continue  # Skip empty slices.
+
+    # Add processed slice to volume list.
+    volumeCropped.append(cropped)
+
+  # Check if any slices were successfully processed.
+  if (len(volumeCropped) == 0):
+    raise ValueError("No slices were successfully processed. Please check the input data.")
+
+  # Determine maximum dimensions across all slices for padding alignment.
+  maxWidth = np.max([cropped.shape[1] for cropped in volumeCropped])
+  maxHeight = np.max([cropped.shape[0] for cropped in volumeCropped])
+
+  # Standardize slice dimensions through symmetric padding.
+  for i in range(len(volumeCropped)):
+    # Calculate required padding for width and height dimensions.
+    deltaWidth = maxWidth - volumeCropped[i].shape[1]
+    deltaHeight = maxHeight - volumeCropped[i].shape[0]
+
+    # Apply padding to create uniform slice dimensions.
+    padded = cv2.copyMakeBorder(
+      volumeCropped[i],
+      deltaHeight // 2,  # Top padding (integer division)
+      deltaHeight - deltaHeight // 2,  # Bottom padding (remainder)
+      deltaWidth // 2,  # Left padding
+      deltaWidth - deltaWidth // 2,  # Right padding
+      cv2.BORDER_CONSTANT,  # Padding style (constant zero values)
+      value=0
+    )
+
+    # Update volume with padded slice.
+    volumeCropped[i] = padded.copy()
+
+  # Convert list of 2D slices into 3D numpy array (z, y, x).
+  volumeCropped = np.array(volumeCropped)
+
+  return volumeCropped
 
 
 def ExtractMultipleObjectsFromROI(
@@ -1617,6 +1708,261 @@ def UniformLocalBinaryPattern2D(
 
   # Return the computed uniform LBP matrix.
   return uniformMatrix
+
+
+# ===========================================================================================
+# Function(s) for calculating shape features.
+# ===========================================================================================
+def ShapeFeatures2D(matrix):
+  """
+  Calculate shape features of a given binary matrix in 2D.
+  The function computes various shape features such as area, perimeter,
+  centroid, bounding box, aspect ratio, compactness, eccentricity,
+  convex hull area, extent, solidity, major and minor axis lengths,
+  orientation, and roundness.
+  Args:
+    matrix: A matrix representing the binary image or segmented region.
+  Returns:
+    A dictionary containing the calculated shape features.
+  """
+
+  # Check if the input matrix is empty or not.
+  if (matrix is None or matrix.size == 0):
+    # Raise error if the matrix is empty.
+    raise ValueError("The input matrix is empty. Please provide a valid matrix.")
+
+  # Calculate the Shape Features:
+
+  # 1. Area.
+  # Counts the number of non-zero pixels in the cropped image.
+  area = cv2.countNonZero(matrix)
+
+  # 2. Perimeter.
+  # Finds contours in the matrix image.
+  contours, _ = cv2.findContours(matrix, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  # Identifies the largest contour.
+  largestContour = max(contours, key=cv2.contourArea)
+  # Calculates the perimeter of the largest contour.
+  perimeter = cv2.arcLength(largestContour, True)
+
+  # 3. Centroid.
+  # Computes moments of the matrix.
+  moments = cv2.moments(matrix)
+  # Calculates the X-coordinate of the centroid.
+  centroidX = int(moments["m10"] / moments["m00"])
+  # Calculates the Y-coordinate of the centroid.
+  centroidY = int(moments["m01"] / moments["m00"])
+
+  # 4. Bounding Box.
+  # Recalculates the bounding box for the matrix.
+  x, y, w, h = cv2.boundingRect(matrix)
+
+  # 5. Aspect Ratio.
+  # Computes the aspect ratio of the bounding box.
+  aspectRatio = w / h
+
+  # 6. Compactness.
+  # Calculates compactness using perimeter and area.
+  compactness = (perimeter ** 2) / (4 * np.pi * area)
+
+  # 7. Eccentricity.
+  # Computes normalized second-order moment mu20.
+  mu20 = moments["mu20"] / moments["m00"]
+  # Computes normalized second-order moment mu02.
+  mu02 = moments["mu02"] / moments["m00"]
+  # Calculates eccentricity based on moments.
+  eccentricity = np.sqrt(1 - (mu02 / mu20))
+
+  # 8. Convex Hull.
+  # Finds the convex hull of the largest contour.
+  smallestConvexHull = cv2.convexHull(largestContour)
+  # Calculates the area of the convex hull.
+  convexHullArea = cv2.contourArea(smallestConvexHull)
+
+  # 9. Extent (or Rectangularity).
+  # Computes the extent as the ratio of contour area to bounding box area.
+  extent = area / (w * h)
+
+  # 10. Solidity.
+  # Calculates solidity as the ratio of contour area to convex hull area.
+  solidity = area / convexHullArea
+
+  # 11. Major Axis Length.
+  # Computes the length of the major axis using the second-order moment mu20.
+  majorAxisLength = 2 * np.sqrt(moments["m20"] / moments["m00"])
+
+  # 12. Minor Axis Length.
+  # Computes the length of the minor axis using the second-order moment mu02.
+  minorAxisLength = 2 * np.sqrt(moments["m02"] / moments["m00"])
+
+  # 13. Orientation.
+  # Calculates orientation angle as the angle of the major axis of the ellipse.
+  orientation = 0.5 * np.arctan2(2 * moments["mu11"], moments["mu20"] - moments["mu02"])
+
+  # 14. Roundness.
+  # Computes roundness based on area and perimeter.
+  roundness = (4 * area) / (np.pi * perimeter ** 2)
+
+  # 15. Symmetry.
+  # Flip the matrix horizontally and vertically.
+  flippedHorizontal = np.fliplr(matrix)
+  flippedVertical = np.flipud(matrix)
+  # Calculate the symmetry score for horizontal flipping.
+  horizontalSymmetry = np.sum(matrix == flippedHorizontal) / area
+  # Calculate the symmetry score for vertical flipping.
+  verticalSymmetry = np.sum(matrix == flippedVertical) / area
+  # Calculate the average symmetry score.
+  symmetry = (horizontalSymmetry + verticalSymmetry) / 2.0
+
+  # 16. Elongation.
+  # Calculate the elongation based on the major and minor axis lengths.
+  elongation = majorAxisLength / minorAxisLength
+
+  # 17. Thinness Ratio.
+  # Calculate the thinness ratio based on the perimeter and area.
+  thinnessRatio = np.power(perimeter, 2) / area
+
+  # 18. Convexity.
+  # Convexity measures how close the shape is to being convex.
+  # It is the ratio of the perimeter of the convex hull to the perimeter of the shape.
+  # True: The contour is closed, False: The contour is open.
+  convexHullPerimeter = cv2.arcLength(smallestConvexHull, True)
+  convexity = convexHullPerimeter / perimeter
+
+  # 19. Sparseness.
+  # Sparseness measures how "spread out" the shape is.
+  # Calculate the area of the bounding box.
+  boundingBoxArea = w * h
+  # Compute sparseness as a measure of spread.
+  sparseness = (np.sqrt(area / boundingBoxArea) - (area / boundingBoxArea))
+
+  # 20. Curvature.
+  # Curvature measures how sharply the contour bends at each point.
+  curvatures = []
+  for i in range(len(largestContour)):
+    # Loop through all points in the largest contour.
+    p1 = largestContour[i - 1][0]  # Previous point.
+    p2 = largestContour[i][0]  # Current point.
+    p3 = largestContour[(i + 1) % len(largestContour)][0]  # Next point.
+    # Calculate the curvature using the cross product and dot product.
+    v1 = p2 - p1  # Vector from p1 to p2.
+    v2 = p3 - p2  # Vector from p2 to p3.
+    crossProduct = np.cross(v1, v2)  # Cross product of the vectors.
+    dotProduct = np.dot(v1, v2)  # Dot product of the vectors.
+    angle = np.arctan2(crossProduct, dotProduct)  # Angle between the vectors.
+    curvatures.append(angle)  # Append the curvature to the list.
+  # Calculate the average curvature.
+  averageCurvature = np.mean(curvatures)
+  # Calculate the standard deviation of curvature.
+  stdCurvature = np.std(curvatures)
+
+  # Return all calculated features as a dictionary.
+  return {
+    "Area"               : area,
+    "Perimeter"          : perimeter,
+    "Centroid X"         : centroidX,
+    "Centroid Y"         : centroidY,
+    "Bounding Box X"     : x,
+    "Bounding Box Y"     : y,
+    "Bounding Box W"     : w,
+    "Bounding Box H"     : h,
+    "Aspect Ratio"       : aspectRatio,
+    "Compactness"        : compactness,
+    "Eccentricity"       : eccentricity,
+    "Convex Hull Area"   : convexHullArea,
+    "Extent"             : extent,
+    "Solidity"           : solidity,
+    "Major Axis Length"  : majorAxisLength,
+    "Minor Axis Length"  : minorAxisLength,
+    "Orientation"        : orientation,
+    "Roundness"          : roundness,
+    "Horizontal Symmetry": horizontalSymmetry,
+    "Vertical Symmetry"  : verticalSymmetry,
+    "Symmetry"           : symmetry,
+    "Elongation"         : elongation,
+    "Thinness Ratio"     : thinnessRatio,
+    "Convexity"          : convexity,
+    "Sparseness"         : sparseness,
+    "Curvature"          : averageCurvature,
+    "Std Curvature"      : stdCurvature,
+  }
+
+
+def ShapeFeatures3D(volume):
+  """
+  Calculate 3D shape features of a given binary or labeled volume.
+  The function computes various geometric and topological properties such as volume,
+  surface area, compactness, sphericity, elongation, flatness, rectangularity,
+  spherical disproportion, and Euler number. These features are derived from the
+  mesh representation of the input volume using marching cubes.
+
+  Args:
+    volume (numpy.ndarray): A 3D binary or labeled matrix representing the object.
+
+  Returns:
+    dict: A dictionary containing the calculated 3D shape features.
+  """
+
+  # Converts an (n, m, p) matrix into a mesh, using marching_cubes.
+  # Marching cubes algorithm generates a triangular mesh from the volume data.
+  mesh = trimesh.voxel.ops.matrix_to_marching_cubes(volume)
+
+  # 1. Volume.
+  # Computes the total number of non-zero voxels in the volume.
+  volume = np.sum(volume)
+
+  # 2. Surface Area.
+  # Calculates the total surface area of the mesh generated by marching cubes.
+  surfaceArea = mesh.area
+
+  # 3. Surface to Volume Ratio.
+  # Measures the ratio of surface area to volume, indicating compactness.
+  surfaceToVolumeRatio = surfaceArea / volume
+
+  # 4. Compactness.
+  # Quantifies how closely the shape resembles a sphere, based on volume and surface area.
+  compactness = (volume ** (2 / 3)) / (6 * np.sqrt(np.pi) * surfaceArea)
+
+  # 5. Sphericity.
+  # Measures how spherical the shape is, normalized by volume and surface area.
+  sphericity = (np.pi ** (1 / 3)) * ((6 * volume) ** (2 / 3)) / surfaceArea
+
+  # Bounding Box.
+  # Computes the bounding box of the mesh and extracts its dimensions.
+  bbox = mesh.bounding_box.bounds
+  Lmax = np.max(bbox[1] - bbox[0])  # Maximum length of the bounding box.
+  Lmin = np.min(bbox[1] - bbox[0])  # Minimum length of the bounding box.
+  Lint = np.median(bbox[1] - bbox[0])  # Intermediate length of the bounding box.
+
+  # 6. Elongation.
+  # Measures the ratio of the longest dimension to the shortest dimension of the bounding box.
+  elongation = Lmax / Lmin
+
+  # 7. Flatness.
+  # Measures the ratio of the shortest dimension to the intermediate dimension of the bounding box.
+  flatness = Lmin / Lint
+
+  # 8. Rectangularity.
+  # Measures how efficiently the shape fills its bounding box, as the ratio of volume to bounding box volume.
+  bboxVolume = np.prod(bbox[1] - bbox[0])  # Volume of the bounding box.
+  rectangularity = volume / bboxVolume
+
+  # 9. Euler Number.
+  # Represents the topological characteristic of the shape, computed from the mesh.
+  eulerNumber = mesh.euler_number
+
+  # Return all calculated features as a dictionary.
+  return {
+    "Volume"                 : volume,
+    "Surface Area"           : surfaceArea,
+    "Surface to Volume Ratio": surfaceToVolumeRatio,
+    "Compactness"            : compactness,
+    "Sphericity"             : sphericity,
+    "Elongation"             : elongation,
+    "Flatness"               : flatness,
+    "Rectangularity"         : rectangularity,
+    "Euler Number"           : eulerNumber
+  }
 
 
 # ===========================================================================================

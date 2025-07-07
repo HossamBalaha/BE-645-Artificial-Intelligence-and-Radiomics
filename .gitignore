@@ -1,9 +1,12 @@
-Lectures Scripts/Data/*.csv
-Lectures Scripts/Data/*/
 .idea
 .idea/*
 __pycache__
 **/__pycache__/
 **/*.py[cod]
 **/*.pyo
+Lectures Scripts/Data/*.csv
+Lectures Scripts/Data/*/
 Lectures Scripts/Mini Project 01.py
+Lectures Scripts/Mini Project 02.py
+Lectures Scripts/*.npz
+Lectures Scripts/*.npy

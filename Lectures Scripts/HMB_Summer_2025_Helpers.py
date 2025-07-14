@@ -2347,6 +2347,73 @@ def MachineLearningClassificationV1(
 # Custom Function(s) for Preprocessing Special Tasks.
 # ===========================================================================================
 
+def MedMnistDatasetDetails(cls, split="train"):
+  """
+  Get the details of the MedMNIST dataset for a specific split (train, val, test).
+
+  Args:
+    cls (class): The MedMNIST dataset class to use for loading the data.
+    split (str): The split of the dataset to load (default is "train").
+
+  Returns:
+    dict: A dictionary containing dataset information such as number of samples,
+          categories, and other metadata.
+  """
+  # Load the dataset for the specified split and download if necessary.
+  if (not cls):  # Check if cls is None or not provided.
+    from medmnist import AdrenalMNIST3D
+    dataset = AdrenalMNIST3D(split=split, download=True)
+  else:  # If cls is provided, use it to load the dataset.
+    dataset = cls(split=split, download=True)
+
+  # Return the dataset information.
+  return dataset.info
+
+
+def MedMnistLoaderIterator(cls, split="train"):
+  """
+  Load and preprocess the MedMNIST dataset for a specific split (train, val, test).
+  This function yields preprocessed volume data, category labels, and indices
+  for each record in the dataset.
+
+  Args:
+    cls (class): The MedMNIST dataset class to use for loading the data.
+    split (str): The split of the dataset to load (default is "train").
+
+  Returns:
+    generator: A generator that yields tuples of (volume, category, index).
+  """
+
+  # Load the dataset for the specified split and download if necessary.
+  if (not cls):  # Check if cls is None or not provided.
+    # If cls is None, use the AdrenalMNIST3D dataset.
+    from medmnist import AdrenalMNIST3D
+    dataset = AdrenalMNIST3D(split=split, download=True)
+  else:  # If cls is provided, use it to load the dataset.
+    # Load the dataset using the provided class.
+    dataset = cls(split=split, download=True)
+  # Print dataset information for reference.
+  for info in dataset.info:
+    print(f"{info}: {dataset.info[info]}")
+  # Extract the label dictionary for mapping indices to categories.
+  categoriesDict = dataset.info["label"]
+  # Iterate through the dataset with a progress bar.
+  for i, record in enumerate(dataset):
+    # Extract the volume data from the record.
+    volume = record[0][0]
+    # Normalize the volume to the range [0, 1].
+    volume = (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
+    # Scale the normalized volume to the range [0, 255].
+    volume = volume * 255
+    # Convert the volume to an unsigned 8-bit integer format.
+    volume = volume.astype(np.uint8)
+    # Extract the category index from the record.
+    categoryIdx = record[1][0]
+    # Map the category index to its corresponding label.
+    category = categoriesDict[str(categoryIdx)]
+    # Yield the preprocessed volume, category, and index.
+    yield volume, category, i
+
 
 def PreprocessBrainTumorDatasetFigshare1512427(
   datasetPath,  # Path to the .mat file containing the image data.

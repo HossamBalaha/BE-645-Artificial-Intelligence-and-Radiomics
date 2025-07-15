@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jun 19th, 2025
-# Last Modification Date: Jun 23rd, 2025
+# Last Modification Date: Jul 14th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -55,6 +55,9 @@ turnedOnFeatures = [
   key for key, value in extractionParams.items()
   if (isinstance(value, dict) and value.get("turnOn", False))
 ]
+# Check if all features are turned off.
+if (len(turnedOnFeatures) == 0):
+  raise ValueError("No features are turned on for extraction. Please enable at least one feature.")
 # Convert the feature names to a string format suitable for the file name.
 turnedOnFeaturesStr = "-".join(turnedOnFeatures)
 # Define the storage path for the features.

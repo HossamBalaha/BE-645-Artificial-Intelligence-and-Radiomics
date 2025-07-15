@@ -2162,7 +2162,7 @@ def GetScalerObject(scalerName):
     return Normalizer()
   # You can add more scalers as needed.
   else:
-    raise ValueError("Invalid scaler name.")
+    raise ValueError(f"Invalid scaler name: {scalerName}.")
 
 
 def GetMLClassificationModelObject(modelName, hyperparameters={}):
@@ -2228,6 +2228,127 @@ def GetMLClassificationModelObject(modelName, hyperparameters={}):
     raise ValueError("Invalid model name.")
 
 
+def PerformFeatureSelection(tech, fsRatio, xTrain, yTrain, xTest, yTest, returnFeatures=False):
+  """
+  Perform feature selection based on the specified technique.
+
+  Args:
+      tech (str): Feature selection technique to use. Options include:
+          - "PCA": Principal Component Analysis.
+          - "LDA": Linear Discriminant Analysis.
+          - "RF": Random Forest feature importance.
+          - "RFE": Recursive Feature Elimination.
+          - "Chi2": Chi-squared test.
+          Default is None (no feature selection).
+      fsRatio (float): Ratio of features to select (0 < fsRatio <= 100).
+      xTrain (array-like): Training data.
+      yTrain (array-like): Training labels.
+      xTest (array-like): Testing data.
+      yTest (array-like): Testing labels.
+      returnFeatures (bool): Return features after feature selection.
+
+  Returns:
+      tuple: Transformed training and testing data after feature selection.
+  """
+  # Calculate the number of features to select based on the ratio provided.
+  noOfFeatures = int(fsRatio * xTrain.shape[1] / 100.0)
+  # Bound the number of features to be at least 1 and at most the number of features in the dataset.
+  noOfFeatures = max(1, min(noOfFeatures, xTrain.shape[1]))
+
+  # Raise an error if the number of features exceeds the number of features in the dataset.
+  if (noOfFeatures > xTrain.shape[1]):
+    raise ValueError("Number of features must be less than or equal to the number of features in the dataset.")
+
+  # If the number of features equals the total number of features,
+  # return the original data without feature selection.
+  if (noOfFeatures == xTrain.shape[1]):
+    return xTrain, xTest
+
+  # Perform PCA for dimensionality reduction if the specified technique is "PCA".
+  if (tech == "PCA"):
+    from sklearn.decomposition import PCA  # Import PCA from sklearn.
+    fs = PCA(n_components=noOfFeatures)  # Initialize PCA with the specified number of components.
+    xTrainFS = fs.fit_transform(xTrain)  # Fit PCA on the training data and transform it.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted PCA.
+    features = [
+      f"PCA_{i + 1}" for i in range(noOfFeatures)
+    ]
+
+  # Perform feature selection using Random Forest feature importance if the specified technique is "RF".
+  elif (tech == "RF"):
+    from sklearn.ensemble import RandomForestClassifier  # Import Random Forest classifier.
+    fs = RandomForestClassifier()  # Initialize a Random Forest classifier.
+    fs.fit(xTrain, yTrain)  # Fit the Random Forest model on the training data.
+    importances = fs.feature_importances_  # Retrieve feature importances from the trained model.
+    indices = np.argsort(importances)[::-1]  # Sort feature importances in descending order.
+    # Select the top features based on the specified number of features.
+    trainCols = xTrain.columns[indices[:noOfFeatures]]  # Select the top features from the training data.
+    testCols = xTest.columns[indices[:noOfFeatures]]  # Select the top features from the testing data.
+    xTrainFS = xTrain[trainCols]  # Filter the training data to keep only the selected features.
+    xTestFS = xTest[testCols]  # Filter the testing data to keep only the selected features.
+    features = trainCols
+
+  # Perform Recursive Feature Elimination (RFE) if the specified technique is "RFE".
+  elif (tech == "RFE"):
+    from sklearn.feature_selection import RFE  # Import RFE from sklearn.
+    from sklearn.ensemble import RandomForestClassifier  # Import Random Forest classifier.
+    columns = xTrain.columns  # Get the column names from the training data.
+    # Initialize RFE with a Random Forest estimator.
+    fs = RFE(RandomForestClassifier(), n_features_to_select=noOfFeatures)
+    fs.fit(xTrain, yTrain)  # Fit RFE on the training data.
+    xTrainFS = fs.transform(xTrain)  # Transform the training data using the fitted RFE.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted RFE.
+    features = xTrain.columns[fs.support_]  # Get the selected features from RFE.
+
+  # Perform feature selection using Chi-squared test if the specified technique is "Chi2".
+  elif (tech == "Chi2"):
+    from sklearn.feature_selection import SelectKBest, chi2  # Import SelectKBest and chi2 from sklearn.
+    fs = SelectKBest(chi2, k=noOfFeatures)  # Initialize SelectKBest with the Chi-squared test.
+    xTrainFS = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+    features = xTrain.columns[fs.get_support()]  # Get the selected features from SelectKBest.
+
+  # Perform feature selection using Mutual Information if the specified technique is "MI".
+  elif (tech == "MI"):
+    # Import SelectKBest and mutual_info_classif from sklearn.
+    from sklearn.feature_selection import SelectKBest, mutual_info_classif
+    columns = xTrain.columns
+    fs = SelectKBest(mutual_info_classif, k=noOfFeatures)  # Initialize SelectKBest with Mutual Information.
+    xTrainFS = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+    features = columns[fs.get_support()]  # Get the selected features from SelectKBest.
+
+  # Perform feature selection using ANOVA if the specified technique is "ANOVA".
+  elif (tech == "ANOVA"):
+    # Import SelectKBest and f_classif from sklearn.
+    from sklearn.feature_selection import SelectKBest, f_classif
+    columns = xTrain.columns
+    fs = SelectKBest(f_classif, k=noOfFeatures)  # Initialize SelectKBest with ANOVA F-value.
+    xTrainFS = fs.fit_transform(xTrain, yTrain)  # Fit SelectKBest on the training data and transform it.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted SelectKBest.
+    features = columns[fs.get_support()]  # Get the selected features from SelectKBest.
+
+  # Perform feature selection using Linear Discriminant Analysis if the specified technique is "LDA".
+  elif (tech == "LDA"):
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis  # Import LDA from sklearn.
+    # Initialize LDA with the specified number of components.
+    # n_components cannot be larger than min(n_features, n_classes - 1)
+    # Ensure noOfFeatures is within valid bounds.
+    noOfFeatures = min(noOfFeatures, xTrain.shape[1], len(np.unique(yTrain)) - 1)
+    fs = LinearDiscriminantAnalysis(n_components=noOfFeatures)
+    xTrainFS = fs.fit_transform(xTrain, yTrain)  # Fit LDA on the training data and transform it.
+    xTestFS = fs.transform(xTest)  # Transform the testing data using the fitted LDA.
+    features = [f"LDA_{i + 1}" for i in range(noOfFeatures)]
+
+  else:
+    raise ValueError(f"Invalid feature selection technique ({tech}) specified.")
+
+  # Return the transformed training and testing data after feature selection.
+  if (returnFeatures):
+    return xTrainFS, xTestFS, fs, features
+  return xTrainFS, xTestFS, fs
+
+
 def MachineLearningClassificationV1(
   datasetFilePath,  # Dataset file name (CSV format).
   scalerName,  # Name of the scaler to use.
@@ -2261,10 +2382,13 @@ def MachineLearningClassificationV1(
       data = data.drop(data.columns[0], axis=1)
 
   # Drop empty columns from the DataFrame.
-  data = data.dropna(axis=1, how="all")
+  # Updated from "all" to "any" to drop columns with any null values.
+  # axis=1: means columns, how="any" means drop if any value is null.
+  data = data.dropna(axis=1, how="any")
 
   # Drop rows with null or empty values from the DataFrame.
-  data = data.dropna()
+  # axis=0: means rows, how="any" means drop if any value is null.
+  data = data.dropna(axis=0, how="any")
 
   # Features (X) are all columns except the "Class" column.
   X = data.drop(targetColumn, axis=1)
@@ -2337,6 +2461,176 @@ def MachineLearningClassificationV1(
     "Model"       : model,
     "Scaler"      : scaler,
     "LabelEncoder": le,
+  }
+
+  # Return the performance metrics, plot object, and objects for saving.
+  return metrics, pltObject, objects
+
+
+def MachineLearningClassificationV2(
+  datasetFilePath,  # Dataset file name (CSV format).
+  scalerName,  # Name of the scaler to use.
+  modelName,  # Name of the machine learning classification model.
+  fsTechName,  # Feature selection technique name.
+  fsTechRatio=0.2,  # Ratio of features to select.
+  testRatio=0.2,  # Ratio of the test data.
+  testFilePath=None,  # Optional test file for evaluation.
+  targetColumn="Class",  # Name of the target column in the dataset.
+  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+):
+  """
+  Perform machine learning classification on the given dataset.
+
+  Parameters:
+      datasetFilePath (str): Dataset file name (CSV format).
+      scalerName (str): Name of the scaler to use.
+      modelName (str): Name of the machine learning classification model.
+      fsTechName (str): Name of the feature selection technique.
+      fsTechRatio (float): Ratio of features to select.
+      testRatio (float): Ratio of the test data.
+      testFilePath (str): Optional test file for evaluation.
+      targetColumn (str): Name of the target column in the dataset.
+      dropFirstColumn (bool): Whether to drop the first column (usually an index or ID).
+
+  Returns:
+      metrics (dict): Dictionary containing the calculated performance metrics.
+  """
+
+  # Read the CSV file into a pandas DataFrame.
+  data = pd.read_csv(datasetFilePath)
+
+  # Check if dropFirstColumn is True, then drop the first column.
+  if (dropFirstColumn):
+    # Drop the first column if it is not the target column.
+    if (data.columns[0] != targetColumn):
+      data = data.drop(data.columns[0], axis=1)
+
+  # Drop empty columns from the DataFrame.
+  # Updated from "all" to "any" to drop columns with any null values.
+  # axis=1: means columns, how="any" means drop if any value is null.
+  data = data.dropna(axis=1, how="any")
+
+  # Drop rows with null or empty values from the DataFrame.
+  # axis=0: means rows, how="any" means drop if any value is null.
+  data = data.dropna(axis=0, how="any")
+
+  # Features (X) are all columns except the "Class" column.
+  X = data.drop(targetColumn, axis=1)
+  currentColumns = X.columns  # Store the current columns for feature selection.
+
+  # Target (y) is the "Class" column.
+  y = data[targetColumn]
+
+  # Encode the target labels into numerical values using LabelEncoder.
+  le = LabelEncoder()
+  yEnc = le.fit_transform(y)
+  labels = le.classes_
+
+  if (testFilePath is not None):
+    # If a test file is provided, read it into a DataFrame.
+    testData = pd.read_csv(testFilePath)
+
+    # Check if dropFirstColumn is True, then drop the first column.
+    if (dropFirstColumn):
+      # Drop the first column if it is not the target column.
+      if (testData.columns[0] != targetColumn):
+        testData = testData.drop(testData.columns[0], axis=1)
+
+    # Ensure test data has the same columns as training data.
+    xTest = testData[currentColumns]
+
+    # Target (y) is the "Class" column.
+    y = testData[targetColumn]
+
+    # Encode the target labels for the test data.
+    yTest = le.transform(y)
+
+    xTrain, yTrain = X, yEnc  # Use the original training data.
+  else:
+    # Split the data into training and testing sets.
+    xTrain, xTest, yTrain, yTest = train_test_split(
+      X, yEnc,
+      test_size=testRatio,
+      random_state=np.random.randint(0, 1000),
+      stratify=yEnc,
+    )
+
+  if (scalerName is not None):
+    # Create a scaler object to scale the features.
+    scaler = GetScalerObject(scalerName)
+
+    # Fit the scaler on the training data and transform it.
+    xTrain = scaler.fit_transform(xTrain)
+
+    # Transform the test data using the fitted scaler.
+    xTest = scaler.transform(xTest)
+
+    # Convert the scaled arrays back to DataFrames with the original column names.
+    xTrain = pd.DataFrame(xTrain, columns=currentColumns)
+    xTest = pd.DataFrame(xTest, columns=currentColumns)
+  else:
+    scaler = None
+
+  # Perform feature selection based on the specified technique.
+  if (fsTechName is not None):
+    xTrain, xTest, fs = PerformFeatureSelection(
+      fsTechName,  # Feature selection technique.
+      fsTechRatio,  # Ratio of features to select.
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      xTest,  # Testing data.
+      yTest,  # Testing labels.
+    )
+  else:
+    fs = None
+
+  # Train a model on the training data.
+  model = GetMLClassificationModelObject(modelName)
+  model.fit(xTrain, yTrain)
+
+  # Evaluate the model by making predictions on the test data.
+  predTest = model.predict(xTest)
+
+  # Calculate the confusion matrix using the true and predicted labels.
+  cm = confusion_matrix(yTest, predTest)
+
+  # Calculate performance metrics.
+  metrics = CalculatePerformanceMetrics(
+    cm,  # Pass the confusion matrix.
+    eps=1e-10,  # Small value to avoid division by zero.
+    addWeightedAverage=True,  # Whether to include weighted averages in the output.
+  )
+
+  # Display the confusion matrix using ConfusionMatrixDisplay.
+  disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,  # Pass the confusion matrix.
+    display_labels=le.classes_,  # Use the encoded labels for display.
+  )
+  # Create a plot for the confusion matrix.
+  fig, ax = plt.subplots(figsize=(8, 8))
+  disp.plot(
+    cmap=plt.cm.Blues,  # Set the color map.
+    values_format="d",  # Set the format of the values.
+    xticks_rotation="horizontal",  # Set the x-axis labels rotation.
+    colorbar=True,  # Show the color bar.
+    ax=ax,  # Set the axis.
+  )
+  plt.title("Confusion Matrix", fontsize=16)  # Set the title.
+  plt.xlabel("Predicted Label", fontsize=14)  # Set the axis labels.
+  plt.ylabel("True Label", fontsize=14)  # Set the axis labels.
+  plt.tight_layout()  # Adjust the layout to fit the plot.
+
+  pltObject = plt.gcf()  # Get the current figure object.
+
+  # Create a dictionary to hold the objects for saving.
+  objects = {
+    "Model"                    : model,
+    "Scaler"                   : scaler,
+    "ScalerName"               : scalerName,
+    "FeatureSelector"          : fs,
+    "FeatureSelectionTechnique": fsTechName,
+    "FeatureSelectionRatio"    : fsTechRatio,
+    "LabelEncoder"             : le,
   }
 
   # Return the performance metrics, plot object, and objects for saving.

@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: Jul 13th, 2025
-# Last Modification Date: Jul 13th, 2025
+# Last Modification Date: Jul 14th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -22,13 +22,13 @@ from HMB_Summer_2025_Helpers import *  # Import custom helper functions.
 # Define the different parameters for feature extraction.
 extractionParams3D = {
   "FirstOrderFeatures": {
-    "turnOn": False,  # Whether to calculate the first order features.
+    "turnOn": True,  # Whether to calculate the first order features.
   },
   "GLCM"              : {
     "d"          : [1, 2, 3],  # Distance between voxel pairs.
     "theta"      : [0, 45],  # Angle (in degrees) for the direction of voxel pairs.
     "isSymmetric": False,  # Whether to make the GLCM symmetric.
-    "turnOn"     : True,  # Whether to calculate the GLCM features.
+    "turnOn"     : False,  # Whether to calculate the GLCM features.
   },
   "GLRLM"             : {
     "theta" : [0, 45],  # Angle (in degrees) for the direction of voxel pairs.
@@ -41,10 +41,9 @@ extractionParams3D = {
   "Shape"             : {
     "turnOn": False,  # Whether to calculate the shape features.
   },
-  "targetSize"        : (128, 128),  # Target size for resizing images.
   "isNorm"            : True,  # Whether to normalize the features.
   "ignoreZeros"       : True,  # Whether to ignore zero-valued pixels.
-  "split"             : "test",  # Dataset split to use for feature extraction.
+  "split"             : "train",  # Dataset split to use for feature extraction.
 }
 
 # Convert the theta angles from degrees to radians for GLCM and GLRLM.
@@ -56,6 +55,9 @@ turnedOnFeatures = [
   key for key, value in extractionParams3D.items()
   if (isinstance(value, dict) and value.get("turnOn", False))
 ]
+# Check if all features are turned off.
+if (len(turnedOnFeatures) == 0):
+  raise ValueError("No features are turned on for extraction. Please enable at least one feature.")
 # Convert the feature names to a string format suitable for the file name.
 turnedOnFeaturesStr = "-".join(turnedOnFeatures)
 
@@ -66,7 +68,7 @@ for key, value in dataDetails.items():
   print(f"{key}: {value}")
 
 # Initialize the dataset iterator for the specified split.
-trainIterator = MedMnistLoaderIterator(AdrenalMNIST3D, split=extractionParams3D["split"])
+dataIterator = MedMnistLoaderIterator(AdrenalMNIST3D, split=extractionParams3D["split"])
 
 # Define the path to save the extracted features.
 splitCap = extractionParams3D["split"].capitalize()  # Capitalize the split name for the file path.
@@ -77,7 +79,7 @@ history = []
 
 # Iterate through each class to process images.
 for record in tqdm.tqdm(
-  trainIterator,
+  dataIterator,
   desc="Processing files.",
   total=dataDetails["n_samples"][extractionParams3D["split"]]
 ):

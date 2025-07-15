@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jul 7th, 2025
+# Last Modification Date: Jul 15th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -14,6 +14,8 @@
 import os  # For file path operations.
 import sys  # For system-specific parameters and functions.
 import cv2  # For image processing tasks.
+import pickle  # For serializing and deserializing Python objects.
+import optuna  # For hyperparameter optimization.
 import pandas as pd  # For data manipulation and analysis.
 # Install the `shutup` library to suppress warnings: pip install shutup
 import shutup  # To suppress the differ warnings.
@@ -24,6 +26,11 @@ import matplotlib.pyplot as plt  # For plotting and visualization.
 from sklearn.preprocessing import *  # Import all preprocessing classes from scikit-learn.
 from sklearn.metrics import *  # Import all metrics classes from scikit-learn.
 from sklearn.model_selection import *  # Import all model selection classes from scikit-learn.
+
+import matplotlib
+
+# To avoid the "No display found" error when running on a server or headless environment.
+matplotlib.use("Agg")
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
@@ -2219,10 +2226,22 @@ def GetMLClassificationModelObject(modelName, hyperparameters={}):
     return LGBMClassifier(**hyperparameters)
   elif (modelName == "Voting"):
     from sklearn.ensemble import VotingClassifier
-    return VotingClassifier(**hyperparameters)
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    estimators = [
+      RandomForestClassifier(),
+      DecisionTreeClassifier(),
+    ]
+    return VotingClassifier(estimators, **hyperparameters)
   elif (modelName == "Stacking"):
     from sklearn.ensemble import StackingClassifier
-    return StackingClassifier(**hyperparameters)
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    estimators = [
+      RandomForestClassifier(),
+      DecisionTreeClassifier(),
+    ]
+    return StackingClassifier(estimators, **hyperparameters)
   # You can add more models as needed.
   else:
     raise ValueError("Invalid model name.")
@@ -2347,6 +2366,68 @@ def PerformFeatureSelection(tech, fsRatio, xTrain, yTrain, xTest, yTest, returnF
   if (returnFeatures):
     return xTrainFS, xTestFS, fs, features
   return xTrainFS, xTestFS, fs
+
+
+def PerformDataBalancing(xTrain, yTrain, techniqueStr="SMOTE"):
+  """
+  Perform data balancing using the specified oversampling technique.
+
+  Args:
+      xTrain (array-like): Training data features.
+      yTrain (array-like): Training data labels.
+      techniqueStr (str): Name of the oversampling technique to use. Options include:
+          - "SMOTE": Synthetic Minority Over-sampling Technique.
+          - "ADASYN": Adaptive Synthetic Sampling.
+          - "BorderlineSMOTE": Borderline-SMOTE.
+          - "SVMSMOTE": SVM-based SMOTE.
+          Default is "SMOTE".
+
+  Returns:
+      tuple: Resampled training data features and labels.
+  """
+
+  if (techniqueStr == "SMOTE"):
+    from imblearn.over_sampling import SMOTE  # Import SMOTE from imbalanced-learn.
+    technique = SMOTE
+  elif (techniqueStr == "ADASYN"):
+    from imblearn.over_sampling import ADASYN  # Import ADASYN from imbalanced-learn.
+    technique = ADASYN
+  elif (techniqueStr == "BorderlineSMOTE"):
+    from imblearn.over_sampling import BorderlineSMOTE  # Import BorderlineSMOTE from imbalanced-learn.
+    technique = BorderlineSMOTE
+  elif (techniqueStr == "SVMSMOTE"):
+    from imblearn.over_sampling import SVMSMOTE  # Import SVMSMOTE from imbalanced-learn.
+    technique = SVMSMOTE
+  elif (techniqueStr == "RandomOverSampler"):
+    from imblearn.over_sampling import RandomOverSampler  # Import RandomOverSampler from imbalanced-learn.
+    technique = RandomOverSampler
+  elif (techniqueStr == "RandomUnderSampler"):
+    from imblearn.under_sampling import RandomUnderSampler  # Import RandomUnderSampler from imbalanced-learn.
+    technique = RandomUnderSampler
+  elif (techniqueStr == "NearMiss"):
+    from imblearn.under_sampling import NearMiss  # Import NearMiss from imbalanced-learn.
+    technique = NearMiss
+  elif (techniqueStr == "ClusterCentroids"):
+    from imblearn.under_sampling import ClusterCentroids  # Import ClusterCentroids from imbalanced-learn.
+    technique = ClusterCentroids
+  else:
+    raise ValueError(f"Invalid data sampling technique ({techniqueStr}) specified.")
+
+  params = {}
+  if (techniqueStr in ["SMOTE", "ADASYN", "BorderlineSMOTE", "SVMSMOTE"]):
+    params = {
+      "sampling_strategy": "minority",
+      "random_state"     : 42,
+    }
+
+  # Create an instance of the specified sampling technique with the given parameters.
+  obj = technique(**params)
+
+  # Fit the sampling technique on the training data and resample it.
+  xTrain, yTrain = obj.fit_resample(xTrain, yTrain)
+
+  # Convert the resampled data back to a DataFrame if it was originally a DataFrame.
+  return xTrain, yTrain, obj
 
 
 def MachineLearningClassificationV1(
@@ -2635,6 +2716,450 @@ def MachineLearningClassificationV2(
 
   # Return the performance metrics, plot object, and objects for saving.
   return metrics, pltObject, objects
+
+
+def MachineLearningClassificationV3(
+  datasetFilePath,  # Dataset file name (CSV format).
+  scalerName,  # Name of the scaler to use.
+  modelName,  # Name of the machine learning classification model.
+  fsTechName,  # Feature selection technique name.
+  fsTechRatio=0.2,  # Ratio of features to select.
+  dataBalanceTech=None,  # Data balancing technique to be applied.
+  testRatio=0.2,  # Ratio of the test data.
+  testFilePath=None,  # Optional test file for evaluation.
+  targetColumn="Class",  # Name of the target column in the dataset.
+  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+):
+  """
+  Perform machine learning classification on the given dataset.
+
+  Parameters:
+      datasetFilePath (str): Dataset file name (CSV format).
+      scalerName (str): Name of the scaler to use.
+      modelName (str): Name of the machine learning classification model.
+      fsTechName (str): Name of the feature selection technique.
+      fsTechRatio (float): Ratio of features to select.
+      dataBalanceTech (str): Data balancing technique to be applied.
+      testRatio (float): Ratio of the test data.
+      testFilePath (str): Optional test file for evaluation.
+      targetColumn (str): Name of the target column in the dataset.
+      dropFirstColumn (bool): Whether to drop the first column (usually an index or ID).
+
+  Returns:
+      metrics (dict): Dictionary containing the calculated performance metrics.
+  """
+
+  # Read the CSV file into a pandas DataFrame.
+  data = pd.read_csv(datasetFilePath)
+
+  # Check if dropFirstColumn is True, then drop the first column.
+  if (dropFirstColumn):
+    # Drop the first column if it is not the target column.
+    if (data.columns[0] != targetColumn):
+      data = data.drop(data.columns[0], axis=1)
+
+  # Drop empty columns from the DataFrame.
+  # Updated from "all" to "any" to drop columns with any null values.
+  # axis=1: means columns, how="any" means drop if any value is null.
+  data = data.dropna(axis=1, how="any")
+
+  # Drop rows with null or empty values from the DataFrame.
+  # axis=0: means rows, how="any" means drop if any value is null.
+  data = data.dropna(axis=0, how="any")
+
+  # Features (X) are all columns except the "Class" column.
+  X = data.drop(targetColumn, axis=1)
+  currentColumns = X.columns  # Store the current columns for feature selection.
+
+  # Target (y) is the "Class" column.
+  y = data[targetColumn]
+
+  # Encode the target labels into numerical values using LabelEncoder.
+  le = LabelEncoder()
+  yEnc = le.fit_transform(y)
+  labels = le.classes_
+
+  if (testFilePath is not None):
+    # If a test file is provided, read it into a DataFrame.
+    testData = pd.read_csv(testFilePath)
+
+    # Check if dropFirstColumn is True, then drop the first column.
+    if (dropFirstColumn):
+      # Drop the first column if it is not the target column.
+      if (testData.columns[0] != targetColumn):
+        testData = testData.drop(testData.columns[0], axis=1)
+
+    # Ensure test data has the same columns as training data.
+    xTest = testData[currentColumns]
+
+    # Target (y) is the "Class" column.
+    y = testData[targetColumn]
+
+    # Encode the target labels for the test data.
+    yTest = le.transform(y)
+
+    xTrain, yTrain = X, yEnc  # Use the original training data.
+  else:
+    # Split the data into training and testing sets.
+    xTrain, xTest, yTrain, yTest = train_test_split(
+      X, yEnc,
+      test_size=testRatio,
+      random_state=np.random.randint(0, 1000),
+      stratify=yEnc,
+    )
+
+  if (scalerName is not None):
+    # Create a scaler object to scale the features.
+    scaler = GetScalerObject(scalerName)
+
+    # Fit the scaler on the training data and transform it.
+    xTrain = scaler.fit_transform(xTrain)
+
+    # Transform the test data using the fitted scaler.
+    xTest = scaler.transform(xTest)
+
+    # Convert the scaled arrays back to DataFrames with the original column names.
+    xTrain = pd.DataFrame(xTrain, columns=currentColumns)
+    xTest = pd.DataFrame(xTest, columns=currentColumns)
+  else:
+    scaler = None
+
+  # Perform feature selection based on the specified technique.
+  if (fsTechName is not None):
+    xTrain, xTest, fs = PerformFeatureSelection(
+      fsTechName,  # Feature selection technique.
+      fsTechRatio,  # Ratio of features to select.
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      xTest,  # Testing data.
+      yTest,  # Testing labels.
+    )
+  else:
+    fs = None
+
+  # Perform data balancing of the training data.
+  if (dataBalanceTech is not None):  # Check if data balancing technique is provided.
+    xTrain, yTrain, dbObj = PerformDataBalancing(
+      xTrain,  # Training data.
+      yTrain,  # Training labels.
+      techniqueStr=dataBalanceTech,  # Data balancing technique to use.
+    )
+  else:
+    dbObj = None  # No data balancing technique used.
+
+  # Train a model on the training data.
+  model = GetMLClassificationModelObject(modelName)
+  model.fit(xTrain, yTrain)
+
+  # Evaluate the model by making predictions on the test data.
+  predTest = model.predict(xTest)
+
+  # Calculate the confusion matrix using the true and predicted labels.
+  cm = confusion_matrix(yTest, predTest)
+
+  # Calculate performance metrics.
+  metrics = CalculatePerformanceMetrics(
+    cm,  # Pass the confusion matrix.
+    eps=1e-10,  # Small value to avoid division by zero.
+    addWeightedAverage=True,  # Whether to include weighted averages in the output.
+  )
+
+  # Display the confusion matrix using ConfusionMatrixDisplay.
+  disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,  # Pass the confusion matrix.
+    display_labels=le.classes_,  # Use the encoded labels for display.
+  )
+  # Create a plot for the confusion matrix.
+  fig, ax = plt.subplots(figsize=(8, 8))
+  disp.plot(
+    cmap=plt.cm.Blues,  # Set the color map.
+    values_format="d",  # Set the format of the values.
+    xticks_rotation="horizontal",  # Set the x-axis labels rotation.
+    colorbar=True,  # Show the color bar.
+    ax=ax,  # Set the axis.
+  )
+  plt.title("Confusion Matrix", fontsize=16)  # Set the title.
+  plt.xlabel("Predicted Label", fontsize=14)  # Set the axis labels.
+  plt.ylabel("True Label", fontsize=14)  # Set the axis labels.
+  plt.tight_layout()  # Adjust the layout to fit the plot.
+
+  pltObject = plt.gcf()  # Get the current figure object.
+
+  # Create a dictionary to hold the objects for saving.
+  objects = {
+    "Model"                    : model,
+    "Scaler"                   : scaler,
+    "ScalerName"               : scalerName,
+    "FeatureSelector"          : fs,
+    "FeatureSelectionTechnique": fsTechName,
+    "FeatureSelectionRatio"    : fsTechRatio,
+    "DataBalanceTechnique"     : dataBalanceTech,
+    "DataBalanceObject"        : dbObj,
+    "LabelEncoder"             : le,
+  }
+
+  # Return the performance metrics, plot object, and objects for saving.
+  return metrics, pltObject, objects
+
+
+class OptunaTuning(object):
+  def __init__(
+    self,
+    scalers,  # List of scalers to be used in the tuning process.
+    models,  # List of machine learning models to be used in the tuning process.
+    fsTechs,  # List of feature selection techniques to be used in the tuning process.
+    fsRatios,  # List of feature selection ratios to be used in the tuning process.
+    dataBalanceTechniques,  # List of data balancing techniques to be used in the tuning process.
+    baseDir,  # Base directory where the dataset is stored.
+    datasetFilename,  # Name of the dataset file.
+    storageFolderPath,  # Path to the folder where results will be stored.
+    testFilename,  # Name of the test dataset file.
+    testRatio=0.2,  # Ratio of the test data.
+    numTrials=100,  # Number of trials for hyperparameter tuning.
+    prefix="Optuna",  # Prefix for the study name and storage files.
+    samplerTech="TPE",  # Sampler technique to be used for hyperparameter tuning.
+  ):
+    """
+    Initializes the OptunaTuning class with the provided hyperparameters.
+
+    Args:
+      scalers (list): List of scalers to be used in the tuning process.
+      models (list): List of machine learning models to be used in the tuning process.
+      fsTechs (list): List of feature selection techniques to be used in the tuning process.
+      fsRatios (list): List of feature selection ratios to be used in the tuning process.
+      dataBalanceTechniques (list): List of data balancing techniques to be used in the tuning process.
+      baseDir (str): Base directory where the dataset is stored.
+      datasetFilename (str): Name of the dataset file to be used for training.
+      storageFolderPath (str): Path to the folder where results will be stored.
+      testFilename (str): Name of the test dataset file to be used for testing.
+      testRatio (float): Ratio of the test data to be used in the classification.
+      numTrials (int): Number of trials for hyperparameter tuning.
+      prefix (str): Prefix for the study name and storage files.
+      samplerTech (str): Sampler technique to be used for hyperparameter tuning. Options are "TPE", "Random", or "CmaEs".
+    """
+    self.scalers = scalers  # List of scalers to be used in the tuning process.
+    self.models = models  # List of machine learning models to be used in the tuning process.
+    self.fsTechs = fsTechs  # List of feature selection techniques to be used in the tuning process.
+    self.fsRatios = fsRatios  # List of feature selection ratios to be used in the tuning process.
+    self.dataBalanceTechniques = dataBalanceTechniques  # List of data balancing techniques to be used in the tuning process.
+    self.baseDir = baseDir  # Base directory where the dataset is stored.
+    self.datasetFilename = datasetFilename  # Name of the dataset file.
+    self.storageFolderPath = storageFolderPath  # Path to the folder where results will be stored.
+    self.testFilename = testFilename  # Name of the test dataset file.
+    self.testRatio = testRatio  # Ratio of the test data to be used in the classification.
+    self.numTrials = numTrials  # Number of trials for hyperparameter tuning.
+    self.prefix = prefix  # Prefix for the study name and storage files.
+
+    if (samplerTech == "TPE"):
+      self.sampler = optuna.samplers.TPESampler(seed=42)
+    elif (samplerTech == "Random"):
+      self.sampler = optuna.samplers.RandomSampler(seed=42)
+    elif (samplerTech == "CmaEs"):
+      self.sampler = optuna.samplers.CmaEsSampler(seed=42)
+    else:
+      raise ValueError(f"Unknown sampler technique: {samplerTech}. Please choose from 'TPE', 'Random', or 'CmaEs'.")
+
+    # Apply random shuffling to the lists to ensure randomness in the selection of hyperparameters.
+    np.random.shuffle(self.scalers)  # Shuffle the scalers for randomness.
+    np.random.shuffle(self.models)  # Shuffle the models for randomness.
+    np.random.shuffle(self.fsTechs)  # Shuffle the feature selection techniques for randomness.
+    np.random.shuffle(self.fsRatios)  # Shuffle the feature ratios for randomness.
+    np.random.shuffle(self.dataBalanceTechniques)  # Shuffle the data sampling techniques for randomness.
+
+    # History variable to store the history of the trials.
+    self.history = []
+
+    # Initialize the study and best parameters.
+    self.study = None  # To store the Optuna study object.
+    self.bestParams = None  # To store the best hyperparameters found by the study.
+    self.bestValue = None  # To store the best value found by the study.
+
+  def ObjectiveFunction(
+    self,
+    trial,  # Optuna trial object.
+  ):
+    """
+    Objective function for Optuna to optimize hyperparameters for machine learning classification.
+    This function performs machine learning classification using the specified hyperparameters,
+    saves the results, and returns the weighted average of the metrics.
+
+    Args:
+      trial (optuna.Trial): The Optuna trial object containing the hyperparameters to be optimized.
+
+    Returns:
+      float: The weighted average of the metrics obtained from the machine learning classification.
+    """
+
+    # Get the parameters for the machine learning classification.
+    modelName = trial.suggest_categorical("Model", self.models)
+    scalerName = trial.suggest_categorical("Scaler", self.scalers)
+    fsTech = trial.suggest_categorical("FS Tech", self.fsTechs)
+    fsRatio = trial.suggest_categorical("FS Ratio", self.fsRatios)
+    dataBalanceTech = trial.suggest_categorical("DB Tech", self.dataBalanceTechniques)
+
+    try:
+      # Call the function to perform machine learning classification.
+      metrics, pltObject, objects = MachineLearningClassificationV3(
+        os.path.join(self.baseDir, self.datasetFilename),  # Path to the dataset file.
+        scalerName,  # Name of the scaler to be used.
+        modelName,  # Name of the machine learning model to be used.
+        fsTech,  # Feature selection technique to be applied.
+        fsRatio,  # Ratio of features to be selected.
+        dataBalanceTech,  # Data balancing technique to be applied.
+        testRatio=self.testRatio,  # Ratio of the test data.
+        testFilePath=os.path.join(self.baseDir, self.testFilename),  # Path to the test dataset file.
+        targetColumn="Class",  # Name of the target column in the dataset.
+        dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+      )
+
+      # Create a pattern for the filename based on model name, scaler name, feature selection technique, and ratio.
+      pattern = f"{modelName}_{scalerName}_{fsTech}_{fsRatio if (fsTech is not None) else None}_{dataBalanceTech}"
+
+      # Added to check if the plot object is not None before saving.
+      if (pltObject is not None):
+        # Save the confusion matrix plot with a specific filename as a PNG image.
+        pltObject.figure.savefig(
+          os.path.join(self.storageFolderPath, f"{pattern}_CM.png"),
+          bbox_inches="tight",  # Adjust the bounding box to fit the plot.
+          dpi=720,  # Set the DPI for the saved image.
+        )
+
+        # pltObject.figure.show()  # Display the confusion matrix plot.
+        pltObject.figure.clf()  # Clear the figure to free up memory.
+        plt.close()  # Close the figure to free up memory.
+
+      # Added to check if the objects are not None before saving.
+      if (objects is not None):
+        # Save the trained model and scaler objects using pickle.
+        with open(
+          os.path.join(self.storageFolderPath, f"{pattern}.p"),
+          "wb",  # Open the file in write-binary mode.
+        ) as f:
+          pickle.dump(objects, f)  # Save the model and scaler objects.
+
+      # Append the model name and scaler name to the metrics dictionary.
+      self.history.append(
+        {
+          "Model"                      : modelName,  # Name of the machine learning model.
+          "Scaler"                     : scalerName,  # Name of the scaler used for preprocessing.
+          "Feature Selection Technique": fsTech,  # Feature selection technique used.
+          # Ratio of features selected, or "N/A" if no feature selection was applied.
+          "Feature Selection Ratio"    : fsRatio if (fsTech is not None) else None,
+          "Data Balancing Technique"   : dataBalanceTech,  # Data balancing technique used.
+          **metrics,
+        }
+      )
+
+      # Return the weighted average of the metrics.
+      return metrics["Weighted Average"]
+    except Exception as e:
+      # Uncomment the following line to print the error.
+      # print(f"\nError: {e}")
+      return 0.0
+
+  def Tune(self):
+    """
+    Tunes the hyperparameters using Optuna for machine learning classification.
+    This function creates an Optuna study, optimizes the objective function,
+    and saves the results including the best hyperparameters, trials history, and performance metrics.
+    It also saves the study object for future reference.
+    """
+
+    # Create the study object.
+    self.study = optuna.create_study(
+      direction="maximize",  # To maximize the objective function.
+      study_name=f"{self.prefix}_Study",  # The study name.
+      storage=f"sqlite:///{self.storageFolderPath}/{self.prefix}_Study.db",  # The database file.
+      load_if_exists=True,  # To load the study if it exists.
+      # https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/003_efficient_optimization_algorithms.html
+      sampler=self.sampler,  # Setting the sampler.
+    )
+
+    # Create the objective function with the arguments.
+    objectiveFunction = lambda trial: self.ObjectiveFunction(trial)
+
+    # Optimize the objective function.
+    self.study.optimize(
+      objectiveFunction,  # Objective function.
+      n_trials=self.numTrials,  # Number of trials.
+      n_jobs=-1,  # To use all available CPUs for parallel execution.
+      show_progress_bar=True,  # To show the progress bar.
+    )
+
+    # Save the performance metrics in a CSV file for future reference.
+    historyDF = pd.DataFrame(self.history)
+    historyDF.to_csv(
+      os.path.join(self.storageFolderPath, "Metrics History.csv"),
+      index=False,
+    )
+
+    # Store the trials in a dataframe.
+    trials = self.study.trials_dataframe()
+    trials.to_csv(
+      os.path.join(self.storageFolderPath, "Optuna Trials History.csv"),
+      index=False,
+    )
+
+    # Get the best hyperparameters and the best value.
+    self.bestParams = self.study.best_params
+    self.bestValue = self.study.best_value
+    print("Best Parameters:", self.bestParams)
+    print("Best Value:", self.bestValue)
+
+    # Save the best hyperparameters to a CSV file.
+    bestParamsDF = pd.DataFrame(self.bestParams, index=[0])
+    bestParamsDF.to_csv(
+      os.path.join(self.storageFolderPath, "Optuna Best Params.csv"),
+      index=False,
+    )
+
+    # Save the study object.
+    with open(os.path.join(self.storageFolderPath, "Optuna Study.p"), "wb") as file:
+      pickle.dump(self.study, file)
+
+  def GetStudy(self):
+    """
+    Returns the Optuna study object.
+
+    Returns:
+      optuna.Study: The Optuna study object.
+    """
+    return self.study
+
+  def GetBestParams(self):
+    """
+    Returns the best hyperparameters found by the Optuna study.
+
+    Returns:
+      dict: A dictionary containing the best hyperparameters.
+    """
+    return self.bestParams
+
+  def GetBestValue(self):
+    """
+    Returns the best value found by the Optuna study.
+
+    Returns:
+      float: The best value found by the Optuna study.
+    """
+    return self.bestValue
+
+  def LoadStudy(self, studyFilePath):
+    """
+    Loads the Optuna study from a file.
+
+    Args:
+      studyFilePath (str): The path to the study file.
+
+    Returns:
+      optuna.Study: The loaded Optuna study object.
+    """
+    with open(studyFilePath, "rb") as file:
+      self.study = pickle.load(file)
+      self.bestParams = self.study.best_params
+      self.bestValue = self.study.best_value
+    print("Study loaded successfully.")
+    return self.study
 
 
 # ===========================================================================================

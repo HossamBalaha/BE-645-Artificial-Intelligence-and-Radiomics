@@ -140,23 +140,27 @@ for modelName in tqdm.tqdm(models, desc="Models"):
           # Create a pattern for the filename based on model name, scaler name, feature selection technique, and ratio.
           pattern = f"{modelName}_{scalerName}_{fsTech}_{fsRatio if (fsTech is not None) else None}"
 
-          # Save the confusion matrix plot with a specific filename as a PNG image.
-          pltObject.figure.savefig(
-            os.path.join(storageFolderPath, f"{pattern}_CM.png"),
-            bbox_inches="tight",  # Adjust the bounding box to fit the plot.
-            dpi=720,  # Set the DPI for the saved image.
-          )
+          # Added to check if the plot object is not None before saving the plot.
+          if (pltObject is not None):
+            # Save the confusion matrix plot with a specific filename as a PNG image.
+            pltObject.figure.savefig(
+              os.path.join(storageFolderPath, f"{pattern}_CM.png"),
+              bbox_inches="tight",  # Adjust the bounding box to fit the plot.
+              dpi=720,  # Set the DPI for the saved image.
+            )
 
-          # pltObject.figure.show()  # Display the confusion matrix plot.
-          pltObject.figure.clf()  # Clear the figure to free up memory.
-          plt.close()  # Close the figure to free up memory.
+            # pltObject.figure.show()  # Display the confusion matrix plot.
+            pltObject.figure.clf()  # Clear the figure to free up memory.
+            plt.close()  # Close the figure to free up memory.
 
-          # Save the trained model and scaler objects using pickle.
-          with open(
-            os.path.join(storageFolderPath, f"{pattern}.p"),
-            "wb",  # Open the file in write-binary mode.
-          ) as f:
-            pickle.dump(objects, f)  # Save the model and scaler objects.
+          # Added to check if the objects are not None before saving them.
+          if (objects is not None):
+            # Save the trained model and scaler objects using pickle.
+            with open(
+              os.path.join(storageFolderPath, f"{pattern}.p"),
+              "wb",  # Open the file in write-binary mode.
+            ) as f:
+              pickle.dump(objects, f)  # Save the model and scaler objects.
 
           # Append the model name and scaler name to the metrics dictionary.
           history.append(

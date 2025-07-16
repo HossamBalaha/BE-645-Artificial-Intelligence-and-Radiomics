@@ -20,10 +20,10 @@ os.environ['OMP_NUM_THREADS'] = "1"
 from HMB_Summer_2025_Helpers import *
 
 # Load the data from the specified CSV file.
-# baseDir = "Data"  # Base directory.
-# datasetFilename = r"AdrenalMNIST3D (FirstOrderFeatures) Train Features.csv"
-# testFilename = r"AdrenalMNIST3D (FirstOrderFeatures) Test Features.csv"
-# storageFolderName = r"AdrenalMNIST3D (FirstOrderFeatures) V3"
+baseDir = "Data"  # Base directory.
+datasetFilename = r"AdrenalMNIST3D (FirstOrderFeatures) Train Features.csv"
+testFilename = r"AdrenalMNIST3D (FirstOrderFeatures) Test Features.csv"
+storageFolderName = r"AdrenalMNIST3D (FirstOrderFeatures) V3"
 
 # baseDir = "Data"  # Base directory.
 # datasetFilename = r"AdrenalMNIST3D (GLCM) Train Features.csv"
@@ -45,10 +45,10 @@ from HMB_Summer_2025_Helpers import *
 # testFilename = r"AdrenalMNIST3D (Shape) Test Features.csv"
 # storageFolderName = r"AdrenalMNIST3D (Shape) V3"
 
-baseDir = "Data"  # Base directory.
-datasetFilename = r"AdrenalMNIST3D (All) Train Features.csv"
-testFilename = r"AdrenalMNIST3D (All) Test Features.csv"
-storageFolderName = r"AdrenalMNIST3D (All) V3"
+# baseDir = "Data"  # Base directory.
+# datasetFilename = r"AdrenalMNIST3D (All) Train Features.csv"
+# testFilename = r"AdrenalMNIST3D (All) Test Features.csv"
+# storageFolderName = r"AdrenalMNIST3D (All) V3"
 
 # Create the storage folder path if it does not exist.
 storageFolderPath = os.path.join(baseDir, storageFolderName)

@@ -6,7 +6,7 @@
 ========================================================================
 # Author: Hossam Magdy Balaha
 # Initial Creation Date: May 21st, 2025
-# Last Modification Date: Jul 15th, 2025
+# Last Modification Date: Jul 18th, 2025
 # Permissions and Citation: Refer to the README file.
 '''
 
@@ -2473,6 +2473,7 @@ def MachineLearningClassificationV1(
 
   # Features (X) are all columns except the "Class" column.
   X = data.drop(targetColumn, axis=1)
+  currentColumns = X.columns  # Store the current columns for later use.
 
   # Target (y) is the "Class" column.
   y = data[targetColumn]
@@ -2539,9 +2540,10 @@ def MachineLearningClassificationV1(
 
   # Create a dictionary to hold the objects for saving.
   objects = {
-    "Model"       : model,
-    "Scaler"      : scaler,
-    "LabelEncoder": le,
+    "Model"         : model,
+    "CurrentColumns": currentColumns,
+    "Scaler"        : scaler,
+    "LabelEncoder"  : le,
   }
 
   # Return the performance metrics, plot object, and objects for saving.
@@ -2654,16 +2656,18 @@ def MachineLearningClassificationV2(
 
   # Perform feature selection based on the specified technique.
   if (fsTechName is not None):
-    xTrain, xTest, fs = PerformFeatureSelection(
+    xTrain, xTest, fs, selectedFeatures = PerformFeatureSelection(
       fsTechName,  # Feature selection technique.
       fsTechRatio,  # Ratio of features to select.
       xTrain,  # Training data.
       yTrain,  # Training labels.
       xTest,  # Testing data.
       yTest,  # Testing labels.
+      returnFeatures=True,  # Return the features after feature selection.
     )
   else:
     fs = None
+    selectedFeatures = currentColumns  # No feature selection, use all features.
 
   # Train a model on the training data.
   model = GetMLClassificationModelObject(modelName)
@@ -2706,10 +2710,12 @@ def MachineLearningClassificationV2(
   # Create a dictionary to hold the objects for saving.
   objects = {
     "Model"                    : model,
+    "CurrentColumns"           : currentColumns,
     "Scaler"                   : scaler,
     "ScalerName"               : scalerName,
     "FeatureSelector"          : fs,
     "FeatureSelectionTechnique": fsTechName,
+    "SelectedFeatures"         : selectedFeatures,
     "FeatureSelectionRatio"    : fsTechRatio,
     "LabelEncoder"             : le,
   }
@@ -2826,16 +2832,18 @@ def MachineLearningClassificationV3(
 
   # Perform feature selection based on the specified technique.
   if (fsTechName is not None):
-    xTrain, xTest, fs = PerformFeatureSelection(
+    xTrain, xTest, fs, selectedFeatures = PerformFeatureSelection(
       fsTechName,  # Feature selection technique.
       fsTechRatio,  # Ratio of features to select.
       xTrain,  # Training data.
       yTrain,  # Training labels.
       xTest,  # Testing data.
       yTest,  # Testing labels.
+      returnFeatures=True,  # Return the features after feature selection.
     )
   else:
     fs = None
+    selectedFeatures = currentColumns  # No feature selection, use all features.
 
   # Perform data balancing of the training data.
   if (dataBalanceTech is not None):  # Check if data balancing technique is provided.
@@ -2888,11 +2896,13 @@ def MachineLearningClassificationV3(
   # Create a dictionary to hold the objects for saving.
   objects = {
     "Model"                    : model,
+    "CurrentColumns"           : currentColumns,
     "Scaler"                   : scaler,
     "ScalerName"               : scalerName,
     "FeatureSelector"          : fs,
     "FeatureSelectionTechnique": fsTechName,
     "FeatureSelectionRatio"    : fsTechRatio,
+    "SelectedFeatures"         : selectedFeatures,
     "DataBalanceTechnique"     : dataBalanceTech,
     "DataBalanceObject"        : dbObj,
     "LabelEncoder"             : le,

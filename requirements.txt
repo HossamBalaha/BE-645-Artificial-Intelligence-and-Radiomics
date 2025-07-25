@@ -12,7 +12,7 @@ pandas==2.3.0
 pyglet==1.5.29
 scikit-image==0.25.2
 scikit-learn==1.6.1
-scipy==1.16.0
+scipy==1.15.3
 seaborn==0.13.2
 shutup==0.2.0
 split-folders==0.5.1

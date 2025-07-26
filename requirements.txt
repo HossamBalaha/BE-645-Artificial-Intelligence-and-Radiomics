@@ -12,7 +12,7 @@ pandas==2.3.0
 pyglet==1.5.29
 scikit-image==0.25.2
 scikit-learn==1.6.1
-scipy==1.15.3
+scipy==1.*
 seaborn==0.13.2
 shutup==0.2.0
 split-folders==0.5.1
@@ -22,3 +22,15 @@ tqdm==4.67.1
 trimesh==4.6.13
 xgboost==3.0.2
 medmnist==3.0.2
+huggingface-hub==0.33.5
+sentence_transformers==5.0.0
+transformers==4.53.3
+pymupdf==1.26.3
+openslide-bin==4.0.0.8
+openslide-python==1.4.2
+spams-bin==2.6.12
+PyWavelets==1.8.0
+imagehash==4.3.2
+brisque==0.0.17
+simpleitk==2.5.2
+PyPDF2==3.0.1

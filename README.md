@@ -43,9 +43,27 @@ pip install -r requirements.txt
 ```
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work
-with the latest versions. Please note that the code has been tested on `Python 3.10.16` and the specified library
-versions on a `Windows 11` machine. It has not been tested on other operating systems or other versions of Python and
-the libraries._
+with the latest versions. Please note that the code has been tested on `Python 3.10.*` (e.g, `3.10.18`) and the
+and the specified library versions on a `Windows 11` machine.
+It has not been tested on other operating systems or other versions of Python and the libraries._
+
+### Anaconda Environment Setup (Optional)
+
+If you are using `Anaconda`, you can create a new environment and install the required libraries using the batch
+script `anaconda-tf-environment.bat` file in the root directory of this repository. To run the script,
+simply double-click on the `anaconda-tf-environment.bat` file.
+
+This batch script (`anaconda-tf-environment.bat`) automates the setup of a TensorFlow environment with CUDA support
+on a Windows system using Conda. It sequentially creates a new Conda environment named `tf` with `Python 3.10`,
+activates it, installs the CUDA Toolkit and cuDNN libraries from the conda-forge channel, and installs Python
+dependencies listed in a `requirements.txt file`. Each step includes error checking to ensure that any failure
+halts the process and provides clear feedback to the user. The benefit of this script is that it simplifies and
+streamlines the often complex and error-prone process of configuring a machine learning environment with GPU
+acceleration.
+
+_Disclaimer: The script is designed to work on a Windows system with Anaconda installed. It may not work on other
+operating systems or with different versions of Anaconda. Please ensure that you have the required permissions
+to run the script and install the required libraries._
 
 ## Dataset and Code
 

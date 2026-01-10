@@ -1,4 +1,4 @@
-# BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2025) - Updated
+# BE 645 Artificial Intelligence (AI) and Radiomics (Spring 2026) - Updated
 
 Welcome to the BE 645: Artificial Intelligence (AI) and Radiomics course.
 
@@ -20,11 +20,9 @@ allow AI models to assist doctors and healthcare professionals in managing and d
 
 This series is your gateway to the fascinating world of applying AI techniques to radiomics.
 
-**Recent Playlist**:
+**Earlier Playlists**:
 
 > Playlist from Summer 2025 (Recorded): https://www.youtube.com/playlist?list=PLVrN2LRb7eT2GOJS8YKf1TcP6X1jr-9Dn
-
-**Earlier Playlists**:
 
 > Playlist from Spring 2025 (AI-Generated Podcasts):
 > https://www.youtube.com/playlist?list=PLVrN2LRb7eT0VBZqrtSAJQd2mqVtIDJKx
@@ -44,26 +42,106 @@ pip install -r requirements.txt
 
 _Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work
 with the latest versions. Please note that the code has been tested on `Python 3.10.*` (e.g, `3.10.18`) and the
-and the specified library versions on a `Windows 11` machine.
-It has not been tested on other operating systems or other versions of Python and the libraries._
+and the specified library versions on a `Windows 11` machine. It has not been tested on other operating systems or other
+versions of Python and the libraries._
 
-### Anaconda Environment Setup (Optional)
+## Anaconda Environment Setup (Optional But Recommended)
 
-If you are using `Anaconda`, you can create a new environment and install the required libraries using the batch
-script `anaconda-tf-environment.bat` file in the root directory of this repository. To run the script,
-simply double-click on the `anaconda-tf-environment.bat` file.
+If you use Anaconda/Miniconda there's a helper batch script included to automate creating a Conda
+environment and installing the Python dependencies listed in `requirements.txt`.
 
-This batch script (`anaconda-tf-environment.bat`) automates the setup of a TensorFlow environment with CUDA support
-on a Windows system using Conda. It sequentially creates a new Conda environment named `tf` with `Python 3.10`,
-activates it, installs the CUDA Toolkit and cuDNN libraries from the conda-forge channel, and installs Python
-dependencies listed in a `requirements.txt file`. Each step includes error checking to ensure that any failure
-halts the process and provides clear feedback to the user. The benefit of this script is that it simplifies and
-streamlines the often complex and error-prone process of configuring a machine learning environment with GPU
-acceleration.
+Script: `anaconda-tf-environment.bat` (located in the repository root)
 
-_Disclaimer: The script is designed to work on a Windows system with Anaconda installed. It may not work on other
-operating systems or with different versions of Anaconda. Please ensure that you have the required permissions
-to run the script and install the required libraries._
+What this script actually does
+
+- Parses optional arguments: `[env_name] [python_version]` and flags `--no-gpu`, `--force`, `--no-pause`, `--silent`,
+  `--clean-log`, and `--help`. Defaults are `env_name=be645`, `python_version=3.10`.
+- Verifies that `conda` is available on the PATH; if not, the script exits with an error and a message prompting you to
+  run it from an Anaconda Prompt or initialize conda in your shell.
+- Attempts a non-fatal `conda update -n base -c defaults conda` early on (the script continues if it fails).
+- Ensures a `requirements.txt` file exists next to the script; if the file is missing the script exits with an
+  explanatory error.
+- Creates/removes the Conda environment using `conda create` / `conda env remove`. These conda invocations are run with
+  `--json` where possible to avoid interactive spinners and produce machine-friendly output.
+- Runs subsequent Python/package commands inside the environment using `conda run -n "<env>"` (so `conda init` is not
+  required).
+- Optionally installs GPU runtime packages into the environment (if `nvidia-smi` is available and `--no-gpu` is not
+  specified) using `conda install -n <env> -c conda-forge cudatoolkit cudnn -y` (the script uses `--json` for conda
+  installs when possible).
+- Upgrades `pip` inside the environment and installs the entire `requirements.txt` with a single pip invocation (
+  `conda run -n "<env>" python -m pip install --progress-bar off -r "%~dp0requirements.txt"`). The script installs all
+  packages via pip by default and does not perform special-case installs for `torch`/`torchvision` unless you modify the
+  script.
+- Captures external tool output and performs lightweight sanitization (strips ANSI escape sequences, carriage returns,
+  and common control characters) before appending to the log. PowerShell writes sanitized output to
+  `anaconda-tf-environment.log` using UTF‑8 encoding. By default the log file is written next to the script (
+  `anaconda-tf-environment.log`).
+- Optionally generates a cleaned log without garbled characters when `--clean-log` is provided; the cleaned file is
+  written as `anaconda-tf-environment-clean.log` next to the script.
+- Behavior for console vs log:
+    - Non-silent runs: the script streams sanitized output to the console and appends the same sanitized UTF‑8 text to
+      the log file.
+    - `--silent` runs: the script suppresses console output but still appends all sanitized output to
+      `anaconda-tf-environment.log`.
+- By default the script pauses at the end so you can read messages; use `--no-pause` to disable that for automation.
+
+Usage (examples):
+
+- Create the default environment named `be645` with Python 3.10 (interactive, console shows progress):
+
+```cmd
+anaconda-tf-environment.bat
+```
+
+- Create a custom environment `myenv` with Python 3.10 (console shows progress):
+
+```cmd
+anaconda-tf-environment.bat myenv 3.10
+```
+
+- Create `myenv` but skip GPU/CUDA installation:
+
+```cmd
+anaconda-tf-environment.bat myenv 3.10 --no-gpu
+```
+
+- Recreate an existing environment (force remove then create):
+
+```cmd
+anaconda-tf-environment.bat myenv 3.10 --force
+```
+
+- Run non-interactively (do not pause at the end):
+
+```cmd
+anaconda-tf-environment.bat myenv 3.10 --no-pause
+```
+
+- You can run the script in silent mode so that it suppresses the output (useful for automated runs or CI):
+
+```cmd
+anaconda-tf-environment.bat --silent
+```
+
+- Generate a cleaned log (remove garbled characters) in addition to the main log:
+
+```cmd
+anaconda-tf-environment.bat --clean-log
+```
+
+- Example: recreate `be645` silently and without pausing at the end, and generate a cleaned log:
+
+```cmd
+anaconda-tf-environment.bat --force --silent --no-pause --clean-log
+```
+
+If you prefer manual setup, you can create a Conda environment and install packages yourself:
+
+```cmd
+conda create -n be645 python=3.10 -y
+conda activate be645
+pip install -r requirements.txt
+```
 
 ## Dataset and Code
 
@@ -206,24 +284,24 @@ If you need to use the code for research or commercial purposes, please contact 
 If you find this series helpful and use it in your research or projects, please consider citing it as:
 
 ```bibtex
-@software{Balaha_BE_645_Artificial_2024,
+@software{Balaha_BE_645_Artificial_2026,
   author  = {Balaha, Hossam Magdy},
-  month   = jun,
-  title   = {{BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2024)}},
+  month   = jan,
+  title   = {{BE 645 Artificial Intelligence (AI) and Radiomics}},
   url     = {https://github.com/HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics},
-  version = {1.06.19},
+  version = {1.26.1},
   year    = {2024}
 }
 
 @software{hossam_magdy_balaha_2024_12170422,
   author    = {Hossam Magdy Balaha},
-  title     = {{HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics: v1.06.19}},
-  month     = jun,
+  title     = {{HossamBalaha/BE-645-Artificial-Intelligence-and-Radiomics}},
+  month     = jan,
   year      = 2024,
   publisher = {Zenodo},
-  version   = {v1.06.19},
-  doi       = {10.5281/zenodo.12170422},
-  url       = {https://doi.org/10.5281/zenodo.12170422}
+  version   = {v1.26.1},
+  doi       = {https://doi.org/10.5281/zenodo.18179368},
+  url       = {https://doi.org/https://doi.org/10.5281/zenodo.18179368}
 }
 ```
 

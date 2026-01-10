@@ -10,3 +10,4 @@ Lectures Scripts/Mini Project 01.py
 Lectures Scripts/Mini Project 02.py
 Lectures Scripts/*.npz
 Lectures Scripts/*.npy
+*.log

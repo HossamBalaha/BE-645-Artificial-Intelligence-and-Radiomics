@@ -31,63 +31,55 @@ This series is your gateway to the fascinating world of applying AI techniques t
 
 ## Programming Language and Libraries
 
-The programming language used in this series is `Python`, and the utilized packages/libraries are stored in
-the `requirements.txt` file in the root directory of this repository.
+This project is written in Python. All Python package dependencies required by the lectures and examples are listed in
+the `requirements.txt` file at the repository root.
 
-To install the required libraries, you can use the following command:
+You can install the dependencies directly with pip (system / virtualenv / activated conda env):
 
-```bash
+```cmd
 pip install -r requirements.txt
 ```
 
-_Disclaimer: The versions of the libraries may change based on updates and releases. However, the code should work
-with the latest versions. Please note that the code has been tested on `Python 3.10.*` (e.g, `3.10.18`) and the
-and the specified library versions on a `Windows 11` machine. It has not been tested on other operating systems or other
-versions of Python and the libraries._
+Recommended Python version: Python `3.10` (the materials were developed and tested with Python `3.10.x`, e.g. `3.10.18`)
+on a Windows machine. The code will often work with other Python `3.10.x` builds, but behavior on other Python
+major/minor versions or on other operating systems has not been exhaustively tested.
 
 ## Anaconda Environment Setup (Optional But Recommended)
 
-If you use Anaconda/Miniconda there's a helper batch script included to automate creating a Conda
-environment and installing the Python dependencies listed in `requirements.txt`.
+A helper batch script is provided to automate creating a Conda environment and installing the packages from
+`requirements.txt` on Windows:
 
 Script: `anaconda-tf-environment.bat` (located in the repository root)
 
-What this script actually does
+Key points about what the script does and how it behaves:
 
-- Parses optional arguments: `[env_name] [python_version]` and flags `--no-gpu`, `--force`, `--no-pause`, `--silent`,
-  `--clean-log`, and `--help`. Defaults are `env_name=be645`, `python_version=3.10`.
-- Verifies that `conda` is available on the PATH; if not, the script exits with an error and a message prompting you to
-  run it from an Anaconda Prompt or initialize conda in your shell.
-- Attempts a non-fatal `conda update -n base -c defaults conda` early on (the script continues if it fails).
-- Ensures a `requirements.txt` file exists next to the script; if the file is missing the script exits with an
-  explanatory error.
-- Creates/removes the Conda environment using `conda create` / `conda env remove`. These conda invocations are run with
-  `--json` where possible to avoid interactive spinners and produce machine-friendly output.
-- Runs subsequent Python/package commands inside the environment using `conda run -n "<env>"` (so `conda init` is not
-  required).
-- Optionally installs GPU runtime packages into the environment (if `nvidia-smi` is available and `--no-gpu` is not
-  specified) using `conda install -n <env> -c conda-forge cudatoolkit cudnn -y` (the script uses `--json` for conda
-  installs when possible).
-- Upgrades `pip` inside the environment and installs the entire `requirements.txt` with a single pip invocation (
-  `conda run -n "<env>" python -m pip install --progress-bar off -r "%~dp0requirements.txt"`). The script installs all
-  packages via pip by default and does not perform special-case installs for `torch`/`torchvision` unless you modify the
-  script.
-- Captures external tool output and performs lightweight sanitization (strips ANSI escape sequences, carriage returns,
-  and common control characters) before appending to the log. PowerShell writes sanitized output to
-  `anaconda-tf-environment.log` using UTF‑8 encoding. By default the log file is written next to the script (
-  `anaconda-tf-environment.log`).
-- Optionally generates a cleaned log without garbled characters when `--clean-log` is provided; the cleaned file is
-  written as `anaconda-tf-environment-clean.log` next to the script.
-- Behavior for console vs log:
-    - Non-silent runs: the script streams sanitized output to the console and appends the same sanitized UTF‑8 text to
-      the log file.
-    - `--silent` runs: the script suppresses console output but still appends all sanitized output to
-      `anaconda-tf-environment.log`.
-- By default the script pauses at the end so you can read messages; use `--no-pause` to disable that for automation.
+- Defaults: environment name `be645` and Python `3.10` (you may supply a different name and Python version as positional
+  arguments).
+- Supported flags: `--no-gpu` (skip attempting to install CUDA/cuDNN), `--force` (remove any existing environment with
+  the same name before creating), `--no-pause` (do not pause at the end), `--silent` (suppress console output), and
+  `--help`.
+    - The script also accepts `--quiet` as an alias for `--silent`.
+- The script verifies that `conda` is available on PATH; if not, it exits with a message and non-zero status. Run it
+  from an Anaconda Prompt or enable conda in your shell before using the script.
+- It attempts a non-fatal `conda update -n base -c defaults conda` early on; the script continues even if the update
+  fails.
+- Ensures `requirements.txt` exists next to the script; if missing the script exits with an explanatory error.
+- Environment creation and removal are handled via `conda create` / `conda env remove`. Subsequent Python/package
+  commands are executed inside the environment using `conda run -n "<env>"` so `conda init` is not required.
+- If an NVIDIA GPU is detected (presence of `nvidia-smi` on PATH) and `--no-gpu` is not provided, the script attempts to
+  install `cudatoolkit` and `cudnn` into the new environment from `conda-forge`.
+- The script upgrades `pip` inside the created environment and installs the packages from `requirements.txt` using a
+  single pip invocation:
+  `conda run -n "<env>" python -m pip install --progress-bar off -r "requirements.txt"`.
+- Logging: the script writes a log file named `anaconda-tf-environment.log` next to the script and appends sanitized
+  runtime messages. By default the script streams messages to the console and appends the same text to the log; use
+  `--silent` to suppress console output while still writing the log.
+- By default the script pauses at the end so you can read messages; use `--no-pause` for non-interactive or automated
+  runs.
 
-Usage (examples):
+Usage examples (Windows `cmd.exe`):
 
-- Create the default environment named `be645` with Python 3.10 (interactive, console shows progress):
+- Create the default environment named `be645` with Python 3.10 (interactive):
 
 ```cmd
 anaconda-tf-environment.bat
@@ -117,25 +109,13 @@ anaconda-tf-environment.bat myenv 3.10 --force
 anaconda-tf-environment.bat myenv 3.10 --no-pause
 ```
 
-- You can run the script in silent mode so that it suppresses the output (useful for automated runs or CI):
+- Run silently (suppress console output, log still written):
 
 ```cmd
 anaconda-tf-environment.bat --silent
 ```
 
-- Generate a cleaned log (remove garbled characters) in addition to the main log:
-
-```cmd
-anaconda-tf-environment.bat --clean-log
-```
-
-- Example: recreate `be645` silently and without pausing at the end, and generate a cleaned log:
-
-```cmd
-anaconda-tf-environment.bat --force --silent --no-pause --clean-log
-```
-
-If you prefer manual setup, you can create a Conda environment and install packages yourself:
+If you prefer to set up the environment manually, you can run the following commands in an Anaconda Prompt:
 
 ```cmd
 conda create -n be645 python=3.10 -y

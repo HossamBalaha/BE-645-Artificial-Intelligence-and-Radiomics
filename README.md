@@ -123,13 +123,13 @@ conda activate be645
 pip install -r requirements.txt
 ```
 
-## Dataset and Code
+## Datasets and Code
 
-**Dataset**:
+**Datasets**
 
 ***Liver Tumor Segmentation (130 CT Scans for Liver Tumor Segmentation)***
 
-This dataset was extracted from LiTS - Liver Tumor Segmentation Challenge (LiTS17) organised in conjunction with ISBI
+This dataset was extracted from LiTS - Liver Tumor Segmentation Challenge (LiTS17) organized in conjunction with ISBI
 2017 and MICCAI 2017.
 
 Dataset Link: https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation

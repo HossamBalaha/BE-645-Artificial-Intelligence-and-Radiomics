@@ -25,10 +25,9 @@ from sklearn.preprocessing import *  # Import all preprocessing classes from sci
 from sklearn.metrics import *  # Import all metrics classes from scikit-learn.
 from sklearn.model_selection import *  # Import all model selection classes from scikit-learn.
 
-import matplotlib
-
+# import matplotlib
 # To avoid the "No display found" error when running on a server or headless environment.
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 
 # To avoid RecursionError in large images.
 # Default recursion limit is 1000.
@@ -199,10 +198,10 @@ def ReadVolumeSpecificClasses(caseImgPaths, caseSegPaths, specificClasses=[]):
 
 
 def ExtractMultipleObjectsFromROI(
-  caseImg, caseSeg,
-  targetSize=(256, 256),
-  cntAreaThreshold=0,
-  sortByX=True,
+    caseImg, caseSeg,
+    targetSize=(256, 256),
+    cntAreaThreshold=0,
+    sortByX=True,
 ):
   '''
   Extracts multiple objects from a region of interest (ROI) in a medical image.
@@ -457,7 +456,7 @@ def FirstOrderFeatures2D(data, isNorm=True, ignoreZeros=True):
 # Function(s) for calculating Gray-Level Co-occurrence Matrix (GLCM) and its features.
 # ===========================================================================================
 
-def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True):
+def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True, verbose=False):
   """
   Calculate the Gray-Level Co-occurrence Matrix (GLCM) for a given image.
 
@@ -468,10 +467,12 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
       isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
       isNorm (bool): Whether to normalize the GLCM. Default is True.
       ignoreZeros (bool): Whether to ignore zero-valued pixels. Default is True.
+      verbose (bool): Whether to print verbose messages. Default is False.
 
   Returns:
       coMatrix (numpy.ndarray): The calculated GLCM.
   """
+
   # Determine the number of unique intensity levels in the matrix.
   minA = np.min(image)  # Minimum intensity value.
   maxA = np.max(image)  # Maximum intensity value.
@@ -497,10 +498,10 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
 
       # Check if the target location is within the bounds of the image.
       if (
-        (endLoc[0] < 0)  # Target row is above the top edge.
-        or (endLoc[0] >= image.shape[0])  # Target row is below the bottom edge.
-        or (endLoc[1] < 0)  # Target column is to the left of the left edge.
-        or (endLoc[1] >= image.shape[1])  # Target column is to the right of the right edge.
+          (endLoc[0] < 0)  # Target row is above the top edge.
+          or (endLoc[0] >= image.shape[0])  # Target row is below the bottom edge.
+          or (endLoc[1] < 0)  # Target column is to the left of the left edge.
+          or (endLoc[1] >= image.shape[1])  # Target column is to the right of the right edge.
       ):
         continue  # Skip this pair if the target is out of bounds.
 
@@ -515,18 +516,38 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
       startPixel = image[startLoc] - minA  # Adjust start pixel value.
       endPixel = image[endLoc] - minA  # Adjust end pixel value.
 
+      if (verbose):
+        print(
+          f"Start: {startLoc}, End: {endLoc}",  # Print the start and end locations.
+          f"Increment (x={image[startLoc]}, y={image[endLoc]}) by 1."  # Print the intensity values.
+        )
+
       # Increment the co-occurrence matrix at the corresponding location.
       coMatrix[endPixel, startPixel] += 1
+
+  if (verbose):
+    print("Co-occurrence Matrix before symmetry and normalization:")
+    print(coMatrix)
 
   # If symmetric, add the transpose of the co-occurrence matrix to itself.
   if (isSymmetric):
     coMatrix += coMatrix.T  # Make the GLCM symmetric.
+    if (verbose):
+      print("Co-occurrence Matrix after applying symmetry:")
+      print(coMatrix)
 
   # Normalize the co-occurrence matrix if requested.
   if (isNorm):
     # Divide each element by the sum of all elements.
     # 1e-6 is added to avoid division by zero.
     coMatrix = coMatrix / (np.sum(coMatrix) + 1e-6)
+    if (verbose):
+      print("Co-occurrence Matrix after applying normalization:")
+      print(coMatrix)
+
+  if (verbose):
+    print("Final Co-occurrence Matrix:")
+    print(coMatrix)
 
   return coMatrix  # Return the calculated GLCM.
 
@@ -578,12 +599,12 @@ def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm
 
         # Check if the target location is within the bounds of the volume.
         if (
-          (endLoc[0] < 0)  # Target slice is below the bottom slice.
-          or (endLoc[0] >= volume.shape[0])  # Target slice is above the top slice.
-          or (endLoc[1] < 0)  # Target row is above the top edge.
-          or (endLoc[1] >= volume.shape[1])  # Target row is below the bottom edge.
-          or (endLoc[2] < 0)  # Target column is to the left of the left edge.
-          or (endLoc[2] >= volume.shape[2])  # Target column is to the right of the right edge.
+            (endLoc[0] < 0)  # Target slice is below the bottom slice.
+            or (endLoc[0] >= volume.shape[0])  # Target slice is above the top slice.
+            or (endLoc[1] < 0)  # Target row is above the top edge.
+            or (endLoc[1] >= volume.shape[1])  # Target row is below the bottom edge.
+            or (endLoc[2] < 0)  # Target column is to the left of the left edge.
+            or (endLoc[2] >= volume.shape[2])  # Target column is to the right of the right edge.
         ):
           continue  # Skip this pair if the target is out of bounds.
 
@@ -613,6 +634,87 @@ def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm
 
   return coMatrix  # Return the calculated GLCM.
 
+def CalculateGLCMFeatures(coMatrix):
+  """
+  Calculate texture features from a Gray-Level Co-occurrence Matrix (GLCM).
+
+  Args:
+      coMatrix (numpy.ndarray): The GLCM as a 2D NumPy array.
+
+  Returns:
+      features (dict): A dictionary containing the calculated texture features.
+  """
+  N = coMatrix.shape[0]  # Number of unique intensity levels.
+
+  # Calculate the energy of the co-occurrence matrix.
+  energy = np.sum(coMatrix ** 2)  # Sum of the squares of all elements in the GLCM.
+
+  # Calculate the contrast in the direction of theta.
+  contrast = 0.0  # Initialize contrast.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      contrast += (i - j) ** 2 * coMatrix[i, j]  # Weighted sum of squared differences.
+
+  # Calculate the homogeneity of the co-occurrence matrix.
+  homogeneity = 0.0  # Initialize homogeneity.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      homogeneity += coMatrix[i, j] / (1 + (i - j) ** 2)  # Weighted sum of inverse differences.
+
+  # Calculate the entropy of the co-occurrence matrix.
+  entropy = 0.0  # Initialize entropy.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      if (coMatrix[i, j] > 0):  # Check if the value is greater than zero.
+        entropy -= coMatrix[i, j] * np.log(coMatrix[i, j])  # Sum of -p * log(p).
+
+  # Calculate the correlation of the co-occurrence matrix.
+  totalSum = np.sum(coMatrix)  # Calculate the sum of all elements in the GLCM.
+  meanX = 0.0  # Initialize mean of rows.
+  meanY = 0.0  # Initialize mean of columns.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      meanX += i * coMatrix[i, j]  # Weighted sum of row indices.
+      meanY += j * coMatrix[i, j]  # Weighted sum of column indices.
+  meanX /= totalSum  # Calculate mean of rows.
+  meanY /= totalSum  # Calculate mean of columns.
+
+  stdDevX = 0.0  # Initialize standard deviation of rows.
+  stdDevY = 0.0  # Initialize standard deviation of columns.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      stdDevX += (i - meanX) ** 2 * coMatrix[i, j]  # Weighted sum of squared row differences.
+      stdDevY += (j - meanY) ** 2 * coMatrix[i, j]  # Weighted sum of squared column differences.
+
+  correlation = 0.0  # Initialize correlation.
+  stdDevX = np.sqrt(stdDevX)  # Calculate standard deviation of rows.
+  stdDevY = np.sqrt(stdDevY)  # Calculate standard deviation of columns.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      correlation += (
+        (i - meanX) * (j - meanY) * coMatrix[i, j] / (stdDevX * stdDevY)
+      )  # Weighted sum of normalized differences.
+
+  # Calculate the dissimilarity of the co-occurrence matrix.
+  dissimilarity = 0.0  # Initialize dissimilarity.
+  for i in range(N):  # Loop through rows.
+    for j in range(N):  # Loop through columns.
+      dissimilarity += np.abs(i - j) * coMatrix[i, j]  # Weighted sum of absolute differences.
+
+  # Return the calculated features as a dictionary.
+  return {
+    "Energy"       : energy,  # Energy of the GLCM.
+    "Contrast"     : contrast,  # Contrast of the GLCM.
+    "Homogeneity"  : homogeneity,  # Homogeneity of the GLCM.
+    "Entropy"      : entropy,  # Entropy of the GLCM.
+    "Correlation"  : correlation,  # Correlation of the GLCM.
+    "Dissimilarity": dissimilarity,  # Dissimilarity of the GLCM.
+    "TotalSum"     : totalSum,  # Sum of all elements in the GLCM.
+    "MeanX"        : meanX,  # Mean of rows.
+    "MeanY"        : meanY,  # Mean of columns.
+    "StdDevX"      : stdDevX,  # Standard deviation of rows.
+    "StdDevY"      : stdDevY,  # Standard deviation of columns.
+  }
 
 def CalculateGLCMFeaturesOptimized(coMatrix):
   """
@@ -676,7 +778,7 @@ def CalculateGLCMFeaturesOptimized(coMatrix):
   for i in range(N):  # Loop through rows.
     for j in range(N):  # Loop through columns.
       correlation += (
-        (i - meanX) * (j - meanY) * coMatrix[i, j] / (stdDevX * stdDevY)
+          (i - meanX) * (j - meanY) * coMatrix[i, j] / (stdDevX * stdDevY)
       )  # Weighted sum of normalized differences.
 
   # Return the calculated features as a dictionary.
@@ -771,10 +873,10 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
 
       # Explore consecutive pixels in specified direction until boundary or value change.
       while (
-        (i + d * dy >= 0) and
-        (i + d * dy < matrix.shape[0]) and
-        (j + d * dx >= 0) and
-        (j + d * dx < matrix.shape[1])
+          (i + d * dy >= 0) and
+          (i + d * dy < matrix.shape[0]) and
+          (j + d * dx >= 0) and
+          (j + d * dx < matrix.shape[1])
       ):
         # Check if subsequent pixel matches current intensity value.
         if (matrix[i + d * dy, j + d * dx] == currentPixel):
@@ -934,12 +1036,12 @@ def CalculateGLRLMRunLengthMatrix3D(volume, theta, isNorm=True, ignoreZeros=True
 
         # Extend run along specified direction until value change.
         while (
-          (i + runLength * dz >= 0) and
-          (i + runLength * dz < volume.shape[0]) and
-          (j + runLength * dy >= 0) and
-          (j + runLength * dy < volume.shape[1]) and
-          (k + runLength * dx >= 0) and
-          (k + runLength * dx < volume.shape[2])
+            (i + runLength * dz >= 0) and
+            (i + runLength * dz < volume.shape[0]) and
+            (j + runLength * dy >= 0) and
+            (j + runLength * dy < volume.shape[1]) and
+            (k + runLength * dx >= 0) and
+            (k + runLength * dx < volume.shape[2])
         ):
           if (volume[i + runLength * dz, j + runLength * dy, k + runLength * dx] == currentVal):
             seenMatrix[i + runLength * dz, j + runLength * dy, k + runLength * dx] = 1
@@ -1001,13 +1103,13 @@ def FindConnectedRegions(image, connectivity=4):
     """
     # Check if the current pixel is out of bounds, already seen, or not matching the current pixel value.
     if (
-      (i < 0) or  # Check if row index is out of bounds.
-      (i >= image.shape[0]) or
-      (j < 0) or
-      (j >= image.shape[1]) or
-      (image[i, j] != currentPixel) or  # Check if pixel value matches the current pixel value.
-      ((i, j) in region) or  # Check if the pixel has already been added to the region.
-      (seenMatrix[i, j] == 1)  # Check if the pixel has already been seen.
+        (i < 0) or  # Check if row index is out of bounds.
+        (i >= image.shape[0]) or
+        (j < 0) or
+        (j >= image.shape[1]) or
+        (image[i, j] != currentPixel) or  # Check if pixel value matches the current pixel value.
+        ((i, j) in region) or  # Check if the pixel has already been added to the region.
+        (seenMatrix[i, j] == 1)  # Check if the pixel has already been seen.
     ):
       return  # Exit if any condition is met.
 
@@ -1290,15 +1392,15 @@ def FindConnectedRegions3D(volume, connectivity=6):
     """
     # Check if the current pixel is out of bounds, already seen, or not matching the current pixel value.
     if (
-      (i < 0) or  # Check if Z-axis index is out of bounds.
-      (i >= volume.shape[0]) or
-      (j < 0) or  # Check if Y-axis index is out of bounds.
-      (j >= volume.shape[1]) or
-      (k < 0) or  # Check if X-axis index is out of bounds.
-      (k >= volume.shape[2]) or
-      (volume[i, j, k] != currentPixel) or  # Check if pixel value matches the current pixel value.
-      ((i, j, k) in region) or  # Check if the pixel has already been added to the region.
-      (seenMatrix[i, j, k] == 1)  # Check if the pixel has already been seen.
+        (i < 0) or  # Check if Z-axis index is out of bounds.
+        (i >= volume.shape[0]) or
+        (j < 0) or  # Check if Y-axis index is out of bounds.
+        (j >= volume.shape[1]) or
+        (k < 0) or  # Check if X-axis index is out of bounds.
+        (k >= volume.shape[2]) or
+        (volume[i, j, k] != currentPixel) or  # Check if pixel value matches the current pixel value.
+        ((i, j, k) in region) or  # Check if the pixel has already been added to the region.
+        (seenMatrix[i, j, k] == 1)  # Check if the pixel has already been seen.
     ):
       return  # Exit if any condition is met.
 
@@ -1450,9 +1552,9 @@ def CalculateGLSZMSizeZoneMatrix3D(volume, connectivity=6, isNorm=True, ignoreZe
 # Function(s) for handling the local binary patterns (LBP).
 # ===========================================================================================
 def BuildLBPKernel(
-  distance=1,  # Distance parameter to determine the size of the kernel.
-  theta=135,  # Angle parameter to rotate the kernel (default is 135 degrees).
-  isClockwise=False,  # Direction of rotation (False means counterclockwise).
+    distance=1,  # Distance parameter to determine the size of the kernel.
+    theta=135,  # Angle parameter to rotate the kernel (default is 135 degrees).
+    isClockwise=False,  # Direction of rotation (False means counterclockwise).
 ):
   """
   Build a kernel matrix for Local Binary Pattern (LBP) computation.
@@ -1551,11 +1653,11 @@ def BuildLBPKernel(
 
 
 def LocalBinaryPattern2D(
-  matrix,
-  distance=1,
-  theta=135,
-  isClockwise=False,
-  normalizeLBP=False,
+    matrix,
+    distance=1,
+    theta=135,
+    isClockwise=False,
+    normalizeLBP=False,
 ):
   """
   Compute the Local Binary Pattern (LBP) matrix for a given 2D matrix.
@@ -1642,11 +1744,11 @@ def LocalBinaryPattern2D(
 
 
 def UniformLocalBinaryPattern2D(
-  matrix,
-  distance=1,
-  theta=135,
-  isClockwise=False,
-  normalizeLBP=False,
+    matrix,
+    distance=1,
+    theta=135,
+    isClockwise=False,
+    normalizeLBP=False,
 ):
   """
   Compute the Uniform Local Binary Pattern (LBP) matrix for a given 2D matrix.
@@ -1975,9 +2077,9 @@ def ShapeFeatures3D(volume):
 # ===========================================================================================
 
 def CalculatePerformanceMetrics(
-  confMatrix,
-  eps=1e-10,
-  addWeightedAverage=False,
+    confMatrix,
+    eps=1e-10,
+    addWeightedAverage=False,
 ):
   """
   Calculate performance metrics from a confusion matrix.
@@ -2429,12 +2531,12 @@ def PerformDataBalancing(xTrain, yTrain, techniqueStr="SMOTE"):
 
 
 def MachineLearningClassificationV1(
-  datasetFilePath,  # Dataset file name (CSV format).
-  scalerName,  # Name of the scaler to use.
-  modelName,  # Name of the machine learning classification model.
-  testRatio=0.2,  # Ratio of the test data.
-  targetColumn="Class",  # Name of the target column in the dataset.
-  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+    datasetFilePath,  # Dataset file name (CSV format).
+    scalerName,  # Name of the scaler to use.
+    modelName,  # Name of the machine learning classification model.
+    testRatio=0.2,  # Ratio of the test data.
+    targetColumn="Class",  # Name of the target column in the dataset.
+    dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
   """
   Perform machine learning classification on the given dataset.
@@ -2549,15 +2651,15 @@ def MachineLearningClassificationV1(
 
 
 def MachineLearningClassificationV2(
-  datasetFilePath,  # Dataset file name (CSV format).
-  scalerName,  # Name of the scaler to use.
-  modelName,  # Name of the machine learning classification model.
-  fsTechName,  # Feature selection technique name.
-  fsTechRatio=0.2,  # Ratio of features to select.
-  testRatio=0.2,  # Ratio of the test data.
-  testFilePath=None,  # Optional test file for evaluation.
-  targetColumn="Class",  # Name of the target column in the dataset.
-  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+    datasetFilePath,  # Dataset file name (CSV format).
+    scalerName,  # Name of the scaler to use.
+    modelName,  # Name of the machine learning classification model.
+    fsTechName,  # Feature selection technique name.
+    fsTechRatio=0.2,  # Ratio of features to select.
+    testRatio=0.2,  # Ratio of the test data.
+    testFilePath=None,  # Optional test file for evaluation.
+    targetColumn="Class",  # Name of the target column in the dataset.
+    dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
   """
   Perform machine learning classification on the given dataset.
@@ -2723,16 +2825,16 @@ def MachineLearningClassificationV2(
 
 
 def MachineLearningClassificationV3(
-  datasetFilePath,  # Dataset file name (CSV format).
-  scalerName,  # Name of the scaler to use.
-  modelName,  # Name of the machine learning classification model.
-  fsTechName,  # Feature selection technique name.
-  fsTechRatio=0.2,  # Ratio of features to select.
-  dataBalanceTech=None,  # Data balancing technique to be applied.
-  testRatio=0.2,  # Ratio of the test data.
-  testFilePath=None,  # Optional test file for evaluation.
-  targetColumn="Class",  # Name of the target column in the dataset.
-  dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
+    datasetFilePath,  # Dataset file name (CSV format).
+    scalerName,  # Name of the scaler to use.
+    modelName,  # Name of the machine learning classification model.
+    fsTechName,  # Feature selection technique name.
+    fsTechRatio=0.2,  # Ratio of features to select.
+    dataBalanceTech=None,  # Data balancing technique to be applied.
+    testRatio=0.2,  # Ratio of the test data.
+    testFilePath=None,  # Optional test file for evaluation.
+    targetColumn="Class",  # Name of the target column in the dataset.
+    dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
   """
   Perform machine learning classification on the given dataset.
@@ -2912,20 +3014,20 @@ def MachineLearningClassificationV3(
 
 class OptunaTuning(object):
   def __init__(
-    self,
-    scalers,  # List of scalers to be used in the tuning process.
-    models,  # List of machine learning models to be used in the tuning process.
-    fsTechs,  # List of feature selection techniques to be used in the tuning process.
-    fsRatios,  # List of feature selection ratios to be used in the tuning process.
-    dataBalanceTechniques,  # List of data balancing techniques to be used in the tuning process.
-    baseDir,  # Base directory where the dataset is stored.
-    datasetFilename,  # Name of the dataset file.
-    storageFolderPath,  # Path to the folder where results will be stored.
-    testFilename,  # Name of the test dataset file.
-    testRatio=0.2,  # Ratio of the test data.
-    numTrials=100,  # Number of trials for hyperparameter tuning.
-    prefix="Optuna",  # Prefix for the study name and storage files.
-    samplerTech="TPE",  # Sampler technique to be used for hyperparameter tuning.
+      self,
+      scalers,  # List of scalers to be used in the tuning process.
+      models,  # List of machine learning models to be used in the tuning process.
+      fsTechs,  # List of feature selection techniques to be used in the tuning process.
+      fsRatios,  # List of feature selection ratios to be used in the tuning process.
+      dataBalanceTechniques,  # List of data balancing techniques to be used in the tuning process.
+      baseDir,  # Base directory where the dataset is stored.
+      datasetFilename,  # Name of the dataset file.
+      storageFolderPath,  # Path to the folder where results will be stored.
+      testFilename,  # Name of the test dataset file.
+      testRatio=0.2,  # Ratio of the test data.
+      numTrials=100,  # Number of trials for hyperparameter tuning.
+      prefix="Optuna",  # Prefix for the study name and storage files.
+      samplerTech="TPE",  # Sampler technique to be used for hyperparameter tuning.
   ):
     """
     Initializes the OptunaTuning class with the provided hyperparameters.
@@ -2983,8 +3085,8 @@ class OptunaTuning(object):
     self.bestValue = None  # To store the best value found by the study.
 
   def ObjectiveFunction(
-    self,
-    trial,  # Optuna trial object.
+      self,
+      trial,  # Optuna trial object.
   ):
     """
     Objective function for Optuna to optimize hyperparameters for machine learning classification.
@@ -3040,8 +3142,8 @@ class OptunaTuning(object):
       if (objects is not None):
         # Save the trained model and scaler objects using pickle.
         with open(
-          os.path.join(self.storageFolderPath, f"{pattern}.p"),
-          "wb",  # Open the file in write-binary mode.
+            os.path.join(self.storageFolderPath, f"{pattern}.p"),
+            "wb",  # Open the file in write-binary mode.
         ) as f:
           pickle.dump(objects, f)  # Save the model and scaler objects.
 
@@ -3243,11 +3345,11 @@ def MedMnistLoaderIterator(cls, split="train"):
 
 
 def PreprocessBrainTumorDatasetFigshare1512427(
-  datasetPath,  # Path to the .mat file containing the image data.
-  storagePath,  # Path to save the converted image.
-  isResize=False,  # Flag to indicate whether to resize the image.
-  newSize=(256, 256),  # New size for resizing the image if isResize is True.
-  separateFolders=False,  # Flag to indicate whether to save images and masks in separate folders.
+    datasetPath,  # Path to the .mat file containing the image data.
+    storagePath,  # Path to save the converted image.
+    isResize=False,  # Flag to indicate whether to resize the image.
+    newSize=(256, 256),  # New size for resizing the image if isResize is True.
+    separateFolders=False,  # Flag to indicate whether to save images and masks in separate folders.
 ):
   """
   Preprocess the Brain Tumor Dataset from Figshare 1512427.

@@ -42,7 +42,7 @@ shutup.please()  # Suppress all warnings from the `shutup` library.
 # ===========================================================================================
 
 def ReadVolume(caseImgPaths, caseSegPaths, raiseErrors=True):
-  """
+  '''
   Read and preprocess a 3D volume from a set of 2D slices and their corresponding segmentation masks.
 
   Parameters:
@@ -51,7 +51,7 @@ def ReadVolume(caseImgPaths, caseSegPaths, raiseErrors=True):
 
   Returns:
       volumeCropped (numpy.ndarray): A 3D NumPy array representing the preprocessed volume.
-  """
+  '''
 
   volumeCropped = []  # Initialize a list to store the cropped slices.
 
@@ -114,7 +114,7 @@ def ReadVolume(caseImgPaths, caseSegPaths, raiseErrors=True):
 
 
 def ReadVolumeSpecificClasses(caseImgPaths, caseSegPaths, specificClasses=[]):
-  """
+  '''
   Read and preprocess a 3D volume from a set of 2D slices and their corresponding segmentation masks.
 
   Parameters:
@@ -125,7 +125,7 @@ def ReadVolumeSpecificClasses(caseImgPaths, caseSegPaths, specificClasses=[]):
 
   Returns:
       volumeCropped (numpy.ndarray): 3D array of preprocessed and aligned medical imaging data.
-  """
+  '''
   # Initialize empty list to store processed slices.
   volumeCropped = []
 
@@ -280,19 +280,20 @@ def ExtractMultipleObjectsFromROI(
 # ===========================================================================================
 
 def FirstOrderFeatures2D_Legacy(img, mask, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate first-order statistical features from an image using a mask.
 
   Parameters:
-      img (numpy.ndarray): The input image as a 2D NumPy array.
-      mask (numpy.ndarray): The binary mask as a 2D NumPy array.
-      isNorm (bool): Flag to indicate whether to normalize the histogram.
-      ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
+    img (numpy.ndarray): The input image as a 2D NumPy array.
+    mask (numpy.ndarray): The binary mask as a 2D NumPy array.
+    isNorm (bool): Flag to indicate whether to normalize the histogram.
+    ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
 
   Returns:
-      results (dict): A dictionary containing the calculated first-order features.
-      hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
-  """
+    results (dict): A dictionary containing the calculated first-order features.
+    hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
+  '''
+
   # Extract the Region of Interest (ROI) using the mask.
   roi = cv2.bitwise_and(img, mask)  # Apply bitwise AND operation to extract the ROI.
 
@@ -370,18 +371,18 @@ def FirstOrderFeatures2D_Legacy(img, mask, isNorm=True, ignoreZeros=True):
 
 
 def FirstOrderFeatures2D(data, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate first-order statistical features from an image using a mask.
 
   Parameters:
-      data (numpy.ndarray): The input image as a 2D NumPy array.
-      isNorm (bool): Flag to indicate whether to normalize the histogram.
-      ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
+    data (numpy.ndarray): The input image as a 2D NumPy array.
+    isNorm (bool): Flag to indicate whether to normalize the histogram.
+    ignoreZeros (bool): Flag to indicate whether to ignore zeros in the histogram.
 
   Returns:
-      results (dict): A dictionary containing the calculated first-order features.
-      hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
-  """
+    results (dict): A dictionary containing the calculated first-order features.
+    hist2D (numpy.ndarray): The histogram of the pixel values in the region of interest.
+  '''
 
   # Calculate the histogram of the cropped ROI.
   minVal = int(np.min(data))  # Find the minimum pixel value in the cropped ROI.
@@ -457,25 +458,25 @@ def FirstOrderFeatures2D(data, isNorm=True, ignoreZeros=True):
 # ===========================================================================================
 
 def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True, verbose=False):
-  """
+  '''
   Calculate the Gray-Level Co-occurrence Matrix (GLCM) for a given image.
 
   Parameters:
-      image (numpy.ndarray): The input image as a 2D NumPy array.
-      d (int): The distance between pixel pairs.
-      theta (float): The angle (in radians) for the direction of pixel pairs.
-      isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
-      isNorm (bool): Whether to normalize the GLCM. Default is True.
-      ignoreZeros (bool): Whether to ignore zero-valued pixels. Default is True.
-      verbose (bool): Whether to print verbose messages. Default is False.
+    image (numpy.ndarray): The input image as a 2D NumPy array.
+    d (int): The distance between pixel pairs.
+    theta (float): The angle (in radians) for the direction of pixel pairs.
+    isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
+    isNorm (bool): Whether to normalize the GLCM. Default is True.
+    ignoreZeros (bool): Whether to ignore zero-valued pixels. Default is True.
+    verbose (bool): Whether to print verbose messages. Default is False.
 
   Returns:
-      coMatrix (numpy.ndarray): The calculated GLCM.
-  """
+    coMatrix (numpy.ndarray): The calculated GLCM.
+  '''
 
   # Determine the number of unique intensity levels in the matrix.
-  minA = np.min(image)  # Minimum intensity value.
-  maxA = np.max(image)  # Maximum intensity value.
+  minA = int(np.min(image))  # Minimum intensity value.
+  maxA = int(np.max(image))  # Maximum intensity value.
   N = maxA - minA + 1  # Number of unique intensity levels.
 
   if (d < 1):
@@ -553,24 +554,24 @@ def CalculateGLCMCooccuranceMatrix(image, d, theta, isSymmetric=False, isNorm=Tr
 
 
 def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate the 3D Gray-Level Co-occurrence Matrix (GLCM) for a given volume.
 
   Parameters:
-      volume (numpy.ndarray): The 3D volume as a NumPy array.
-      d (int): The distance between voxel pairs.
-      theta (float): The angle (in radians) for the direction of voxel pairs.
-      isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
-      isNorm (bool): Whether to normalize the GLCM. Default is True.
-      ignoreZeros (bool): Whether to ignore zero-valued voxels. Default is True.
+    volume (numpy.ndarray): The 3D volume as a NumPy array.
+    d (int): The distance between voxel pairs.
+    theta (float): The angle (in radians) for the direction of voxel pairs.
+    isSymmetric (bool): Whether to make the GLCM symmetric. Default is False.
+    isNorm (bool): Whether to normalize the GLCM. Default is True.
+    ignoreZeros (bool): Whether to ignore zero-valued voxels. Default is True.
 
   Returns:
-      coMatrix (numpy.ndarray): The calculated GLCM.
-  """
+    coMatrix (numpy.ndarray): The calculated GLCM.
+  '''
 
   # Determine the number of unique intensity levels in the volume.
-  minA = np.min(volume)  # Minimum intensity value.
-  maxA = np.max(volume)  # Maximum intensity value.
+  minA = int(np.min(volume))  # Minimum intensity value.
+  maxA = int(np.max(volume))  # Maximum intensity value.
   N = maxA - minA + 1  # Number of unique intensity levels.
 
   noOfSlices = volume.shape[0]  # Number of slices in the volume.
@@ -635,15 +636,16 @@ def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm
   return coMatrix  # Return the calculated GLCM.
 
 def CalculateGLCMFeatures(coMatrix):
-  """
+  '''
   Calculate texture features from a Gray-Level Co-occurrence Matrix (GLCM).
 
-  Args:
-      coMatrix (numpy.ndarray): The GLCM as a 2D NumPy array.
+  Parameters:
+    coMatrix (numpy.ndarray): The GLCM as a 2D NumPy array.
 
   Returns:
-      features (dict): A dictionary containing the calculated texture features.
-  """
+    features (dict): A dictionary containing the calculated texture features.
+  '''
+  
   N = coMatrix.shape[0]  # Number of unique intensity levels.
 
   # Calculate the energy of the co-occurrence matrix.
@@ -717,7 +719,7 @@ def CalculateGLCMFeatures(coMatrix):
   }
 
 def CalculateGLCMFeaturesOptimized(coMatrix):
-  """
+  '''
   Calculate texture features from a Gray-Level Co-occurrence Matrix (GLCM).
 
   Parameters:
@@ -725,7 +727,7 @@ def CalculateGLCMFeaturesOptimized(coMatrix):
 
   Returns:
       features (dict): A dictionary containing the calculated texture features.
-  """
+  '''
   N = coMatrix.shape[0]  # Number of unique intensity levels.
 
   # Calculate the energy of the co-occurrence matrix.
@@ -802,7 +804,7 @@ def CalculateGLCMFeaturesOptimized(coMatrix):
 # ===========================================================================================
 
 def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate the Gray-Level Run-Length Matrix (GLRLM) for a given 2D matrix.
 
   The GLRLM is a statistical tool used to quantify the texture of an image by
@@ -831,12 +833,12 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
       A 2D matrix representing the Gray-Level Run-Length Matrix. The rows correspond to
       intensity levels, and the columns correspond to run lengths. If `isNorm` is True,
       the matrix is normalized.
-  """
+  '''
 
   # Calculate minimum intensity value in the input matrix for intensity range adjustment.
-  minA = np.min(matrix)
+  minA = int(np.min(matrix))
   # Calculate maximum intensity value in the input matrix for intensity range adjustment.
-  maxA = np.max(matrix)
+  maxA = int(np.max(matrix))
   # Determine total number of distinct gray levels by calculating intensity range span.
   N = maxA - minA + 1
   # Find maximum potential run length based on largest matrix dimension.
@@ -906,7 +908,7 @@ def CalculateGLRLMRunLengthMatrix(matrix, theta, isNorm=True, ignoreZeros=True):
 
 
 def CalculateGLRLMFeatures(rlMatrix, image):
-  """
+  '''
   Calculate texture features from a Gray-Level Run-Length Matrix (GLRLM).
 
   This function computes various texture features based on the GLRLM, which is derived
@@ -933,12 +935,12 @@ def CalculateGLRLMFeatures(rlMatrix, image):
       - "Run Percentage"              : Ratio of runs to the total number of pixels.
       - "Low Gray Level Run Emphasis" : Emphasizes runs with low gray levels.
       - "High Gray Level Run Emphasis": Emphasizes runs with high gray levels.
-  """
+  '''
 
   # Determine minimum intensity value in the original image.
-  minA = np.min(image)
+  minA = int(np.min(image))
   # Determine maximum intensity value in the original image.
-  maxA = np.max(image)
+  maxA = int(np.max(image))
   # Calculate total number of distinct gray levels in the image.
   N = maxA - minA + 1
   # Get maximum possible run length from image dimensions.
@@ -994,7 +996,7 @@ def CalculateGLRLMFeatures(rlMatrix, image):
 
 
 def CalculateGLRLMRunLengthMatrix3D(volume, theta, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate 3D Gray-Level Run-Length Matrix (GLRLM) for volumetric texture analysis.
 
   Parameters:
@@ -1005,10 +1007,10 @@ def CalculateGLRLMRunLengthMatrix3D(volume, theta, isNorm=True, ignoreZeros=True
 
   Returns:
       rlMatrix (numpy.ndarray): 2D matrix of size (intensity levels × max run length)
-  """
+  '''
   # Calculate intensity range parameters for matrix indexing.
-  minA = np.min(volume)
-  maxA = np.max(volume)
+  minA = int(np.min(volume))
+  maxA = int(np.max(volume))
   N = maxA - minA + 1  # Number of discrete intensity levels
   R = np.max(volume.shape)  # Maximum possible run length
 
@@ -1069,7 +1071,7 @@ def CalculateGLRLMRunLengthMatrix3D(volume, theta, isNorm=True, ignoreZeros=True
 # ===========================================================================================
 
 def FindConnectedRegions(image, connectivity=4):
-  """
+  '''
   Finds connected regions in a 2D image based on pixel connectivity.
 
   Parameters:
@@ -1084,10 +1086,10 @@ def FindConnectedRegions(image, connectivity=4):
       dict: A dictionary where keys are unique pixel values from the image,
             and values are lists of sets. Each set contains the coordinates
             (i, j) of pixels belonging to a connected region for that pixel value.
-  """
+  '''
 
   def RecursiveHelper(i, j, currentPixel, region, seenMatrix, connectivity=4):
-    """
+    '''
     Recursive helper function to find all connected pixels for a given starting pixel.
 
     Parameters:
@@ -1100,7 +1102,7 @@ def FindConnectedRegions(image, connectivity=4):
 
     Returns:
         None: The function modifies the `region` and `seenMatrix` in place.
-    """
+    '''
     # Check if the current pixel is out of bounds, already seen, or not matching the current pixel value.
     if (
         (i < 0) or  # Check if row index is out of bounds.
@@ -1165,7 +1167,7 @@ def FindConnectedRegions(image, connectivity=4):
 
 
 def CalculateGLSZMSizeZoneMatrix(image, connectivity=4, isNorm=False, ignoreZeros=False):
-  """
+  '''
   Calculate the Size-Zone Matrix for a given image based on connected regions.
 
   Parameters:
@@ -1185,7 +1187,7 @@ def CalculateGLSZMSizeZoneMatrix(image, connectivity=4, isNorm=False, ignoreZero
                       (i, j) of pixels belonging to a connected region for that pixel value.
       N (int): The number of unique pixel values in the image.
       Z (int): The maximum size of any region in the dictionary.
-  """
+  '''
 
   if (image.ndim != 2):
     raise ValueError("The input image must be a 2D array.")
@@ -1203,8 +1205,8 @@ def CalculateGLSZMSizeZoneMatrix(image, connectivity=4, isNorm=False, ignoreZero
   szDict = FindConnectedRegions(image, connectivity=connectivity)
 
   # Determine the number of unique pixel values in the image.
-  minA = np.min(image)  # Minimum intensity value.
-  maxA = np.max(image)  # Maximum intensity value.
+  minA = int(np.min(image))  # Minimum intensity value.
+  maxA = int(np.max(image))  # Maximum intensity value.
   N = maxA - minA + 1  # Number of unique intensity levels.
 
   # Find the maximum size of any region in the dictionary.
@@ -1244,7 +1246,7 @@ def CalculateGLSZMSizeZoneMatrix(image, connectivity=4, isNorm=False, ignoreZero
 
 
 def CalculateGLSZMFeatures(szMatrix, data, N, Z):
-  """
+  '''
   Calculate the features of the Size-Zone Matrix (GLSZM).
 
   Parameters:
@@ -1254,7 +1256,7 @@ def CalculateGLSZMFeatures(szMatrix, data, N, Z):
 
   Returns:
       dict: A dictionary containing the calculated features.
-  """
+  '''
   # Calculate the total number of zones in the size-zone matrix.
   # Sum all values in the size-zone matrix to get the total zone count.
   szN = np.sum(szMatrix)
@@ -1362,7 +1364,7 @@ def CalculateGLSZMFeatures(szMatrix, data, N, Z):
 
 
 def FindConnectedRegions3D(volume, connectivity=6):
-  """
+  '''
   Finds connected regions in a 3D volume based on pixel connectivity.
   Parameters:
       volume (numpy.ndarray): A 3D NumPy array representing the input volume.
@@ -1374,10 +1376,10 @@ def FindConnectedRegions3D(volume, connectivity=6):
       dict: A dictionary where keys are unique pixel values from the volume,
             and values are lists of sets. Each set contains the coordinates
             (i, j, k) of pixels belonging to a connected region for that pixel value.
-  """
+  '''
 
   def RecursiveHelper(i, j, k, currentPixel, region, seenMatrix, connectivity=6):
-    """
+    '''
     Recursive helper function to find all connected pixels for a given starting pixel.
     Parameters:
         i (int): Z-axis index of the current pixel.
@@ -1389,7 +1391,7 @@ def FindConnectedRegions3D(volume, connectivity=6):
         connectivity (int): The type of connectivity (6 or 26).
     Returns:
         None: The function modifies the `region` and `seenMatrix` in place.
-    """
+    '''
     # Check if the current pixel is out of bounds, already seen, or not matching the current pixel value.
     if (
         (i < 0) or  # Check if Z-axis index is out of bounds.
@@ -1480,7 +1482,7 @@ def FindConnectedRegions3D(volume, connectivity=6):
 
 
 def CalculateGLSZMSizeZoneMatrix3D(volume, connectivity=6, isNorm=True, ignoreZeros=True):
-  """
+  '''
   Calculate the Size-Zone Matrix for a 3D volume based on connected regions.
   Parameters:
       volume (numpy.ndarray): A 3D NumPy array representing the input volume.
@@ -1497,7 +1499,7 @@ def CalculateGLSZMSizeZoneMatrix3D(volume, connectivity=6, isNorm=True, ignoreZe
                      (i, j, k) of pixels belonging to a connected region for that pixel value.
       N (int): The number of unique pixel values in the volume.
       Z (int): The maximum size of any region in the dictionary.
-  """
+  '''
 
   if (volume.ndim != 3):
     raise ValueError("The input volume must be a 3D array.")
@@ -1556,7 +1558,7 @@ def BuildLBPKernel(
     theta=135,  # Angle parameter to rotate the kernel (default is 135 degrees).
     isClockwise=False,  # Direction of rotation (False means counterclockwise).
 ):
-  """
+  '''
   Build a kernel matrix for Local Binary Pattern (LBP) computation.
   The kernel is generated based on the specified distance and angle (theta).
   The kernel is a square matrix of size (2 * distance + 1) x (2 * distance + 1).
@@ -1571,7 +1573,7 @@ def BuildLBPKernel(
 
   Returns:
     np.ndarray: A kernel matrix representing the LBP pattern weights.
-  """
+  '''
 
   # Check if the distance is less than 1, raising a ValueError if true.
   if (distance < 1):
@@ -1659,7 +1661,7 @@ def LocalBinaryPattern2D(
     isClockwise=False,
     normalizeLBP=False,
 ):
-  """
+  '''
   Compute the Local Binary Pattern (LBP) matrix for a given 2D matrix.
   This function calculates the LBP values based on the specified distance,
   angle (theta), and direction (clockwise or counterclockwise).
@@ -1675,7 +1677,7 @@ def LocalBinaryPattern2D(
 
   Returns:
     np.ndarray: LBP matrix with the same shape as the input image, containing LBP values.
-  """
+  '''
 
   # Check if the distance is less than 1, raising a ValueError if true.
   if (distance < 1):
@@ -1750,7 +1752,7 @@ def UniformLocalBinaryPattern2D(
     isClockwise=False,
     normalizeLBP=False,
 ):
-  """
+  '''
   Compute the Uniform Local Binary Pattern (LBP) matrix for a given 2D matrix.
   This function calculates the LBP values based on the specified distance,
   angle (theta), and direction (clockwise or counterclockwise).
@@ -1768,7 +1770,7 @@ def UniformLocalBinaryPattern2D(
 
   Returns:
     np.ndarray: Uniform LBP matrix with the same shape as the input image, containing LBP values.
-  """
+  '''
 
   # Run the standard LBP function to get the LBP matrix.
   lbpMatrix = LocalBinaryPattern2D(
@@ -1821,7 +1823,7 @@ def UniformLocalBinaryPattern2D(
 # Function(s) for calculating shape features.
 # ===========================================================================================
 def ShapeFeatures2D(matrix):
-  """
+  '''
   Calculate shape features of a given binary matrix in 2D.
   The function computes various shape features such as area, perimeter,
   centroid, bounding box, aspect ratio, compactness, eccentricity,
@@ -1831,7 +1833,7 @@ def ShapeFeatures2D(matrix):
     matrix: A matrix representing the binary image or segmented region.
   Returns:
     A dictionary containing the calculated shape features.
-  """
+  '''
 
   # Check if the input matrix is empty or not.
   if (matrix is None or matrix.size == 0):
@@ -1996,7 +1998,7 @@ def ShapeFeatures2D(matrix):
 
 
 def ShapeFeatures3D(volume):
-  """
+  '''
   Calculate 3D shape features of a given binary or labeled volume.
   The function computes various geometric and topological properties such as volume,
   surface area, compactness, sphericity, elongation, flatness, rectangularity,
@@ -2008,7 +2010,7 @@ def ShapeFeatures3D(volume):
 
   Returns:
     dict: A dictionary containing the calculated 3D shape features.
-  """
+  '''
 
   # Converts an (n, m, p) matrix into a mesh, using marching_cubes.
   # Marching cubes algorithm generates a triangular mesh from the volume data.
@@ -2081,7 +2083,7 @@ def CalculatePerformanceMetrics(
     eps=1e-10,
     addWeightedAverage=False,
 ):
-  """
+  '''
   Calculate performance metrics from a confusion matrix.
 
   Parameters:
@@ -2111,7 +2113,7 @@ def CalculatePerformanceMetrics(
         - Weighted F1
         - Weighted Accuracy
         - Weighted Specificity
-  """
+  '''
   # Convert the confusion matrix to a NumPy array for easier manipulation.
   confMatrix = np.array(confMatrix)
 
@@ -2240,7 +2242,7 @@ def CalculatePerformanceMetrics(
 # ===========================================================================================
 
 def GetScalerObject(scalerName):
-  """
+  '''
   Get the scaler object based on the given name.
 
   Parameters:
@@ -2248,7 +2250,7 @@ def GetScalerObject(scalerName):
 
   Returns:
       scaler (object): Scaler object.
-  """
+  '''
   if (scalerName == "Standard"):
     from sklearn.preprocessing import StandardScaler
     return StandardScaler()
@@ -2273,7 +2275,7 @@ def GetScalerObject(scalerName):
 
 
 def GetMLClassificationModelObject(modelName, hyperparameters={}):
-  """
+  '''
   Get the machine learning classification model object based on the given name.
 
   Parameters:
@@ -2281,7 +2283,7 @@ def GetMLClassificationModelObject(modelName, hyperparameters={}):
 
   Returns:
       model (object): Model object.
-  """
+  '''
   if (modelName == "MLP"):
     from sklearn.neural_network import MLPClassifier
     return MLPClassifier(**hyperparameters)
@@ -2348,7 +2350,7 @@ def GetMLClassificationModelObject(modelName, hyperparameters={}):
 
 
 def PerformFeatureSelection(tech, fsRatio, xTrain, yTrain, xTest, yTest, returnFeatures=False):
-  """
+  '''
   Perform feature selection based on the specified technique.
 
   Parameters:
@@ -2368,7 +2370,7 @@ def PerformFeatureSelection(tech, fsRatio, xTrain, yTrain, xTest, yTest, returnF
 
   Returns:
       tuple: Transformed training and testing data after feature selection.
-  """
+  '''
   # Calculate the number of features to select based on the ratio provided.
   noOfFeatures = int(fsRatio * xTrain.shape[1] / 100.0)
   # Bound the number of features to be at least 1 and at most the number of features in the dataset.
@@ -2469,7 +2471,7 @@ def PerformFeatureSelection(tech, fsRatio, xTrain, yTrain, xTest, yTest, returnF
 
 
 def PerformDataBalancing(xTrain, yTrain, techniqueStr="SMOTE"):
-  """
+  '''
   Perform data balancing using the specified oversampling technique.
 
   Parameters:
@@ -2484,7 +2486,7 @@ def PerformDataBalancing(xTrain, yTrain, techniqueStr="SMOTE"):
 
   Returns:
       tuple: Resampled training data features and labels.
-  """
+  '''
 
   if (techniqueStr == "SMOTE"):
     from imblearn.over_sampling import SMOTE  # Import SMOTE from imbalanced-learn.
@@ -2538,7 +2540,7 @@ def MachineLearningClassificationV1(
     targetColumn="Class",  # Name of the target column in the dataset.
     dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
-  """
+  '''
   Perform machine learning classification on the given dataset.
 
   Parameters:
@@ -2551,7 +2553,7 @@ def MachineLearningClassificationV1(
 
   Returns:
       metrics (dict): Dictionary containing the calculated performance metrics.
-  """
+  '''
 
   # Read the CSV file into a pandas DataFrame.
   data = pd.read_csv(datasetFilePath)
@@ -2661,7 +2663,7 @@ def MachineLearningClassificationV2(
     targetColumn="Class",  # Name of the target column in the dataset.
     dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
-  """
+  '''
   Perform machine learning classification on the given dataset.
 
   Parameters:
@@ -2677,7 +2679,7 @@ def MachineLearningClassificationV2(
 
   Returns:
       metrics (dict): Dictionary containing the calculated performance metrics.
-  """
+  '''
 
   # Read the CSV file into a pandas DataFrame.
   data = pd.read_csv(datasetFilePath)
@@ -2836,7 +2838,7 @@ def MachineLearningClassificationV3(
     targetColumn="Class",  # Name of the target column in the dataset.
     dropFirstColumn=True,  # Whether to drop the first column (usually an index or ID).
 ):
-  """
+  '''
   Perform machine learning classification on the given dataset.
 
   Parameters:
@@ -2853,7 +2855,7 @@ def MachineLearningClassificationV3(
 
   Returns:
       metrics (dict): Dictionary containing the calculated performance metrics.
-  """
+  '''
 
   # Read the CSV file into a pandas DataFrame.
   data = pd.read_csv(datasetFilePath)
@@ -3029,7 +3031,7 @@ class OptunaTuning(object):
       prefix="Optuna",  # Prefix for the study name and storage files.
       samplerTech="TPE",  # Sampler technique to be used for hyperparameter tuning.
   ):
-    """
+    '''
     Initializes the OptunaTuning class with the provided hyperparameters.
 
     Parameters:
@@ -3046,7 +3048,7 @@ class OptunaTuning(object):
       numTrials (int): Number of trials for hyperparameter tuning.
       prefix (str): Prefix for the study name and storage files.
       samplerTech (str): Sampler technique to be used for hyperparameter tuning. Options are "TPE", "Random", or "CmaEs".
-    """
+    '''
     self.scalers = scalers  # List of scalers to be used in the tuning process.
     self.models = models  # List of machine learning models to be used in the tuning process.
     self.fsTechs = fsTechs  # List of feature selection techniques to be used in the tuning process.
@@ -3088,7 +3090,7 @@ class OptunaTuning(object):
       self,
       trial,  # Optuna trial object.
   ):
-    """
+    '''
     Objective function for Optuna to optimize hyperparameters for machine learning classification.
     This function performs machine learning classification using the specified hyperparameters,
     saves the results, and returns the weighted average of the metrics.
@@ -3098,7 +3100,7 @@ class OptunaTuning(object):
 
     Returns:
       float: The weighted average of the metrics obtained from the machine learning classification.
-    """
+    '''
 
     # Get the parameters for the machine learning classification.
     modelName = trial.suggest_categorical("Model", self.models)
@@ -3168,12 +3170,12 @@ class OptunaTuning(object):
       return 0.0
 
   def Tune(self):
-    """
+    '''
     Tunes the hyperparameters using Optuna for machine learning classification.
     This function creates an Optuna study, optimizes the objective function,
     and saves the results including the best hyperparameters, trials history, and performance metrics.
     It also saves the study object for future reference.
-    """
+    '''
 
     # Create the study object.
     self.study = optuna.create_study(
@@ -3228,34 +3230,34 @@ class OptunaTuning(object):
       pickle.dump(self.study, file)
 
   def GetStudy(self):
-    """
+    '''
     Returns the Optuna study object.
 
     Returns:
       optuna.Study: The Optuna study object.
-    """
+    '''
     return self.study
 
   def GetBestParams(self):
-    """
+    '''
     Returns the best hyperparameters found by the Optuna study.
 
     Returns:
       dict: A dictionary containing the best hyperparameters.
-    """
+    '''
     return self.bestParams
 
   def GetBestValue(self):
-    """
+    '''
     Returns the best value found by the Optuna study.
 
     Returns:
       float: The best value found by the Optuna study.
-    """
+    '''
     return self.bestValue
 
   def LoadStudy(self, studyFilePath):
-    """
+    '''
     Loads the Optuna study from a file.
 
     Parameters:
@@ -3263,7 +3265,7 @@ class OptunaTuning(object):
 
     Returns:
       optuna.Study: The loaded Optuna study object.
-    """
+    '''
     with open(studyFilePath, "rb") as file:
       self.study = pickle.load(file)
       self.bestParams = self.study.best_params
@@ -3277,7 +3279,7 @@ class OptunaTuning(object):
 # ===========================================================================================
 
 def MedMnistDatasetDetails(cls, split="train"):
-  """
+  '''
   Get the details of the MedMNIST dataset for a specific split (train, val, test).
 
   Parameters:
@@ -3287,7 +3289,7 @@ def MedMnistDatasetDetails(cls, split="train"):
   Returns:
     dict: A dictionary containing dataset information such as number of samples,
           categories, and other metadata.
-  """
+  '''
   # Load the dataset for the specified split and download if necessary.
   if (not cls):  # Check if cls is None or not provided.
     from medmnist import AdrenalMNIST3D
@@ -3300,7 +3302,7 @@ def MedMnistDatasetDetails(cls, split="train"):
 
 
 def MedMnistLoaderIterator(cls, split="train"):
-  """
+  '''
   Load and preprocess the MedMNIST dataset for a specific split (train, val, test).
   This function yields preprocessed volume data, category labels, and indices
   for each record in the dataset.
@@ -3311,7 +3313,7 @@ def MedMnistLoaderIterator(cls, split="train"):
 
   Returns:
     generator: A generator that yields tuples of (volume, category, index).
-  """
+  '''
 
   # Load the dataset for the specified split and download if necessary.
   if (not cls):  # Check if cls is None or not provided.
@@ -3351,7 +3353,7 @@ def PreprocessBrainTumorDatasetFigshare1512427(
     newSize=(256, 256),  # New size for resizing the image if isResize is True.
     separateFolders=False,  # Flag to indicate whether to save images and masks in separate folders.
 ):
-  """
+  '''
   Preprocess the Brain Tumor Dataset from Figshare 1512427.
   Link: https://figshare.com/articles/dataset/brain_tumor_dataset/1512427
 
@@ -3364,7 +3366,7 @@ def PreprocessBrainTumorDatasetFigshare1512427(
 
   Returns:
       None
-  """
+  '''
   # Install using pip install hdf5storage.
   import hdf5storage, os, tqdm  # Import necessary libraries.
 

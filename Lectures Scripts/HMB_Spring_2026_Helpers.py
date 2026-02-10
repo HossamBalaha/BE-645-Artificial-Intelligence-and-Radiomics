@@ -2564,14 +2564,11 @@ def MachineLearningClassificationV1(
     if (data.columns[0] != targetColumn):
       data = data.drop(data.columns[0], axis=1)
 
-  # Drop empty columns from the DataFrame.
-  # Updated from "all" to "any" to drop columns with any null values.
-  # axis=1: means columns, how="any" means drop if any value is null.
-  data = data.dropna(axis=1, how="any")
-
-  # Drop rows with null or empty values from the DataFrame.
-  # axis=0: means rows, how="any" means drop if any value is null.
-  data = data.dropna(axis=0, how="any")
+  # Interpolate missing values in the DataFrame using linear interpolation.
+  # method: "linear" means linear interpolation,
+  # limit_direction: "forward" means to fill missing values forward,
+  # axis=0 means to interpolate along the columns.
+  data = data.interpolate(method="linear", limit_direction="forward", axis=0)
 
   # Features (X) are all columns except the "Class" column.
   X = data.drop(targetColumn, axis=1)

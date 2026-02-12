@@ -1250,12 +1250,12 @@ def CalculateGLSZMFeatures(szMatrix, data, N, Z):
   Calculate the features of the Size-Zone Matrix (GLSZM).
 
   Parameters:
-      szMatrix (numpy.ndarray): A 2D NumPy array representing the Size-Zone Matrix.
-      N (int): The number of unique pixel values in the image.
-      Z (int): The maximum size of any region in the dictionary.
+    szMatrix (numpy.ndarray): A 2D NumPy array representing the Size-Zone Matrix.
+    N (int): The number of unique pixel values in the image.
+    Z (int): The maximum size of any region in the dictionary.
 
   Returns:
-      dict: A dictionary containing the calculated features.
+    dict: A dictionary containing the calculated features.
   '''
   # Calculate the total number of zones in the size-zone matrix.
   # Sum all values in the size-zone matrix to get the total zone count.

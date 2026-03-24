@@ -24,6 +24,15 @@ import matplotlib.pyplot as plt  # For plotting and visualization.
 from sklearn.preprocessing import *  # Import all preprocessing classes from scikit-learn.
 from sklearn.metrics import *  # Import all metrics classes from scikit-learn.
 from sklearn.model_selection import *  # Import all model selection classes from scikit-learn.
+from sklearn.feature_selection import *  # Import all feature selection classes from scikit-learn.
+# You can import specific classes from TensorFlow Keras as needed.
+from tensorflow.keras.optimizers import *  # Import all optimizers from TensorFlow Keras.
+from tensorflow.keras.losses import *  # Import all loss functions from TensorFlow Keras.
+from tensorflow.keras.metrics import *  # Import all metrics from TensorFlow Keras.
+from tensorflow.keras.callbacks import *  # Import all callbacks from TensorFlow Keras.
+from tensorflow.keras.models import *  # Import all model classes from TensorFlow Keras.
+from tensorflow.keras.layers import *  # Import all layer classes from TensorFlow Keras.
+from tensorflow.keras.applications import *  # Import all pre-trained models from TensorFlow Keras.
 
 # import matplotlib
 # To avoid the "No display found" error when running on a server or headless environment.
@@ -635,6 +644,7 @@ def CalculateGLCMCooccuranceMatrix3D(volume, d, theta, isSymmetric=False, isNorm
 
   return coMatrix  # Return the calculated GLCM.
 
+
 def CalculateGLCMFeatures(coMatrix):
   '''
   Calculate texture features from a Gray-Level Co-occurrence Matrix (GLCM).
@@ -645,7 +655,7 @@ def CalculateGLCMFeatures(coMatrix):
   Returns:
     features (dict): A dictionary containing the calculated texture features.
   '''
-  
+
   N = coMatrix.shape[0]  # Number of unique intensity levels.
 
   # Calculate the energy of the co-occurrence matrix.
@@ -694,7 +704,7 @@ def CalculateGLCMFeatures(coMatrix):
   for i in range(N):  # Loop through rows.
     for j in range(N):  # Loop through columns.
       correlation += (
-        (i - meanX) * (j - meanY) * coMatrix[i, j] / (stdDevX * stdDevY)
+          (i - meanX) * (j - meanY) * coMatrix[i, j] / (stdDevX * stdDevY)
       )  # Weighted sum of normalized differences.
 
   # Calculate the dissimilarity of the co-occurrence matrix.
@@ -717,6 +727,7 @@ def CalculateGLCMFeatures(coMatrix):
     "StdDevX"      : stdDevX,  # Standard deviation of rows.
     "StdDevY"      : stdDevY,  # Standard deviation of columns.
   }
+
 
 def CalculateGLCMFeaturesOptimized(coMatrix):
   '''
@@ -3269,6 +3280,63 @@ class OptunaTuning(object):
       self.bestValue = self.study.best_value
     print("Study loaded successfully.")
     return self.study
+
+
+# ===========================================================================================
+# Custom Function(s) for Pretrained CNNs.
+# ===========================================================================================
+def PretrainedCNN(baseModel, inputShape, noOfClasses=4, optimizer=Adam(), verbose=0):
+  if (not baseModel):
+    # Create the model.
+    baseModel = MobileNetV2(
+      # Exclude default classification head; we'll add a custom head.
+      include_top=False,
+      # Initialize with ImageNet weights.
+      weights="imagenet",
+      # Input image shape for the model.
+      input_shape=inputShape,
+    )
+
+  for layer in baseModel.layers:
+    # Freeze the pretrained base during initial fine-tuning.
+    layer.trainable = False
+
+  model = Sequential([
+    # Pretrained convolutional backbone.
+    baseModel,
+    # Aggregate spatial features into a vector.
+    GlobalAveragePooling2D(),
+    # Fully-connected layers for task-specific learning.
+    Dense(128, activation="relu"),
+    Dropout(0.5),
+    Dense(64, activation="relu"),
+    Dropout(0.5),
+    # Output layer: softmax over 4 classes.
+    Dense(noOfClasses, activation="softmax") if (noOfClasses > 2) else Dense(1, activation="sigmoid"),
+  ])
+
+  model.compile(
+    optimizer=optimizer,
+    # You can use "sparse_categorical_crossentropy" if your labels are integers instead of one-hot encoded.
+    loss="categorical_crossentropy" if (noOfClasses > 2) else "binary_crossentropy",
+    metrics=[
+      CategoricalAccuracy() if (noOfClasses > 2) else BinaryAccuracy(),
+      Precision(),
+      Recall(),
+      AUC(),
+      TruePositives(name="TP"),
+      TrueNegatives(name="TN"),
+      FalsePositives(name="FP"),
+      FalseNegatives(name="FN"),
+    ],
+  )
+
+  # Optionally print the model summary when verbose is enabled.
+  if (verbose):
+    model.summary()
+
+  # Return the compiled Keras model.
+  return model
 
 
 # ===========================================================================================

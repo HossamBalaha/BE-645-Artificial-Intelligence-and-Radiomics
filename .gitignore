@@ -4,6 +4,7 @@ __pycache__
 **/__pycache__/
 **/*.py[cod]
 **/*.pyo
+Lectures Scripts/History
 Lectures Scripts/Data/*.csv
 Lectures Scripts/Data/*/
 Lectures Scripts/Mini Project 01.py

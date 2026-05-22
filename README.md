@@ -1,4 +1,4 @@
-# BE 645 Artificial Intelligence (AI) and Radiomics (Spring 2026) - Updated
+# BE 645 Artificial Intelligence (AI) and Radiomics (Summer 2026) - Updated
 
 Welcome to the BE 645: Artificial Intelligence (AI) and Radiomics course.
 

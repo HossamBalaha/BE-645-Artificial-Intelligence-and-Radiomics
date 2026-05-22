@@ -13,7 +13,7 @@ import cv2  # For image processing tasks.
 import os  # For file and directory operations.
 import numpy as np  # For numerical operations.
 import pandas as pd  # For data manipulation and saving results to CSV.
-from HMB_Summer_2026_Helpers import *  # Import custom helper functions.
+from HMB_Spring_2026_Helpers import *  # Import custom helper functions.
 
 # Define the paths to the volume slices and segmentation masks.
 caseVolPath = r"Data/Volume Slices"  # Path to the folder containing volume slices.

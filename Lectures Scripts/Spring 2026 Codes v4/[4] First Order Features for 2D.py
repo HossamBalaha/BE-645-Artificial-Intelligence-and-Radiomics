@@ -12,7 +12,7 @@
 import cv2  # For image processing tasks.
 import numpy as np  # For numerical operations.
 import matplotlib.pyplot as plt  # For plotting graphs.
-from HMB_Summer_2026_Helpers import *  # Import custom helper functions.
+from HMB_Spring_2026_Helpers import *  # Import custom helper functions.
 
 # Define the paths to the input image and segmentation mask.
 caseImgPath = r"Data/Sample Liver Image.bmp"  # Path to the liver image.
